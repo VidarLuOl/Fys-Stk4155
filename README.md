@@ -13,17 +13,17 @@ Som den berømte Erna Solberg ein gong sa:
 ## Opg.1
 
 1. Lag et datasett som består av x og y.
-    *Verdiene på x og y skal være mellom 0 og 1
+    * Verdiene på x og y skal være mellom 0 og 1
 2. Få disse til å funke på FrankeFunksjon(x,y)
-    *f(x,y) = FrankeFunksjon(x,y)
-    *Legg til normaldistribuert stokastisk støy til denne
+    * f(x,y) = FrankeFunksjon(x,y)
+    * Legg til normaldistribuert stokastisk støy til denne
 3. Lag egen kode for å utføre en "Standard Least Square Regression Analysis"
-    *Bruk enten Matrix Inversion, Singular Value Decomposition(fra numpy) eller kode fra før(uke 1 og 2).
-    *Bruk polynomial i x og y opp til 5 orden.
+    * Bruk enten Matrix Inversion, Singular Value Decomposition(fra numpy) eller kode fra før(uke 1 og 2).
+    * Bruk polynomial i x og y opp til 5 orden.
 4. Finn "Confidence interval" av parameterne \beta ved å beregna varaiansen.
 5. Evaluer "Mean Square Error"(MSE) og R^2
 6. Koden må inkludere en skalerings metode, et eks på dette er å ta minus gjennomsnittet.
-    *Her må vi forklare hvorfor vi velger den valgte meoden.
+    * Her må vi forklare hvorfor vi velger den valgte meoden.
 7. Split dataen i trenings/test sett
-    *70/30 fordeling
-    *Bruk egen kode fra før eller Scikit-learn
+    * 70/30 fordeling
+    * Bruk egen kode fra før eller Scikit-learn
