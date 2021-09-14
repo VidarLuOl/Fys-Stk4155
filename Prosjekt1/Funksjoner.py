@@ -1,4 +1,7 @@
 import numpy as np #For FrankeFunction, MSE, R2
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -7,10 +10,9 @@ def FrankeFunction(x,y):
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
     return term1 + term2 + term3 + term4
 
+
 def OLS(x, y, z, p, n):
     XD = Design_X(x, y, p) #Designmatrisen blir laget her
-
-    z = np.ravel(z)  #Vi er nødt til å gjøre om y til en vektor ettersom det er en matrise før.
 
     beta = betaFunc(XD, z) #Vi finner beta verdiene her
 
@@ -21,6 +23,32 @@ def OLS(x, y, z, p, n):
 
     R2_score = R2(z, ztilde)
     return MeanSE, R2_score, ztilde_plot
+
+
+def Scaled_OSL(x, y, z, p, s):
+    scaler = StandardScaler()
+    
+    XD = Design_X(x, y, p) #Designmatrisen blir laget her
+
+    XD_train, XD_test, z_train, z_test = train_test_split(XD, z.reshape(-1,1), test_size=s)
+
+    scaler.fit(XD_train)
+    XD_train_scaled = scaler.transform(XD_train)
+    XD_test_scaled = scaler.transform(XD_test)
+    XD_train_scaled[:,0] = 1
+    XD_test_scaled[:,0] = 1
+
+    beta_train_scaled = betaFunc(XD_train_scaled, z_train)
+
+    ztilde = XD_train_scaled @ beta_train_scaled
+    zpredict = XD_test_scaled @ beta_train_scaled
+
+    MeanSE = MSE(z_test, zpredict)
+
+    R2_score = R2(z_test, zpredict)
+    return MeanSE, R2_score, ztilde, zpredict
+
+
 
 """___________________________________OSL FUNKSJONER________________________________"""
 def Design_X(x, y, p):
@@ -60,29 +88,3 @@ def R2(y, ytilde):
         l += (y[i] - m)**2
     return 1 - u/l
 """______________________________________________________________________________________________"""
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-
-def Scaled_OSL(x, y, z, p, n):
-    scaler = StandardScaler()
-    
-    XD = Design_X(x, y, p) #Designmatrisen blir laget her
-
-    scaler.fit(XD)
-    XD = scaler.transform(XD)
-    XD[:, 0] = 1
-
-    
-
-    # z = np.ravel(z)  #Vi er nødt til å gjøre om y til en vektor ettersom det er en matrise før.
-
-    # beta = betaFunc(XD, z) #Vi finner beta verdiene her
-
-    # ztilde = XD @ beta
-    # ztilde_plot = np.reshape(ztilde, (n,n))
-
-    # MeanSE = MSE(z, ztilde)
-
-    # R2_score = R2(z, ztilde)
-    return "hei"
