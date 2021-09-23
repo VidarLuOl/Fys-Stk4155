@@ -1,7 +1,9 @@
+
 import numpy as np #For FrankeFunction, MSE, R2
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from seaborn import lineplot
 
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -11,44 +13,48 @@ def FrankeFunction(x,y):
     return term1 + term2 + term3 + term4
 
 
-def OLS(x, y, z, p, n):
-    XD = Design_X(x, y, p) #Designmatrisen blir laget her
+def OLS(x, y, z, p, n, s, noise, conf, prnt):
+    scaler = StandardScaler(with_std=False)
 
-    beta = betaFunc(XD, z) #Vi finner beta verdiene her
-
-    ztilde = XD @ beta
-    ztilde_plot = np.reshape(ztilde, (n,n))
-
-    MeanSE = MSE(z, ztilde)
-
-    R2_score = R2(z, ztilde)
-    return MeanSE, R2_score, ztilde_plot
-
-
-def Scaled_OSL(x, y, z, p, s):
-    scaler = StandardScaler()
+    # plotTrain = np.zeros(p)
+    # plotTest = np.zeros(p)
     
-    XD = Design_X(x, y, p) #Designmatrisen blir laget her
 
-    XD_train, XD_test, z_train, z_test = train_test_split(XD, z.reshape(-1,1), test_size=s)
+    for i in range(p, p+1):
+        XD = Design_X(x, y, i) #Designmatrisen blir laget her
 
-    scaler.fit(XD_train)
-    XD_train_scaled = scaler.transform(XD_train)
-    XD_test_scaled = scaler.transform(XD_test)
-    XD_train_scaled[:,0] = 1
-    XD_test_scaled[:,0] = 1
+        XD_train, XD_test, z_train, z_test = train_test_split(XD, z.reshape(-1,1), test_size=s)
 
-    beta_train_scaled = betaFunc(XD_train_scaled, z_train)
+        scaler.fit(XD_train)
+        XD_train_scaled = scaler.transform(XD_train)
+        XD_test_scaled = scaler.transform(XD_test)
 
-    ztilde = XD_train_scaled @ beta_train_scaled
-    zpredict = XD_test_scaled @ beta_train_scaled
+        XD_train_scaled[:,0] = 1
+        XD_test_scaled[:,0] = 1
+        
+        beta = BetaFunc(XD_train_scaled, z_train) #Vi finner beta verdiene her
 
-    MeanSE = MSE(z_test, zpredict)
+        ztilde_train = XD_train_scaled @ beta
+        ztilde_test = XD_test_scaled @ beta
 
-    R2_score = R2(z_test, zpredict)
-    return MeanSE, R2_score, ztilde, zpredict
+        MeanSETrain = MSE(z_train, ztilde_train)
+        MeanSETest = MSE(z_test, ztilde_test)
 
+        R2_score = R2(z_train, ztilde_train)
 
+        beta_variance = Variance(XD_train_scaled, n)*np.diag(np.linalg.inv(XD_train_scaled.T @ XD_train_scaled))
+
+        beta_std = ConfInt(conf, beta_variance, n)
+
+        if(prnt == 1):
+            print("Skalert og trent OLS")
+            print("Grad = %i (p)" %i)
+            print("Antall undersøkt = %i (n)" %n)
+            print("MSE = %.6f" %MeanSETrain)
+            print("R2 = %.6f" %R2_score)
+            print("\n")
+    plt.errorbar(range(0,len(beta)), beta, beta_std, fmt="o")
+    plt.show()
 
 """___________________________________OSL FUNKSJONER________________________________"""
 def Design_X(x, y, p):
@@ -66,7 +72,7 @@ def Design_X(x, y, p):
             X[:,q+k] = x**(i-k)*y**k    #using the binomial theorem to get the right exponents
     return X
 
-def betaFunc(X, y):
+def BetaFunc(X, y):
     return np.linalg.inv(X.T @ X) @ (X.T @ y)
 
 def MSE(y, ytilde):
@@ -76,7 +82,7 @@ def MSE(y, ytilde):
     n = np.size(y)
     for i in range(0,n-1):
         s += (y[i] - ytilde[i])**2
-    return (1/n) * s
+    return s/n
 
 def R2(y, ytilde):
     #R2 er en skala mellom 0 og 1, hvor jo nærmere 1 enn er jo bedre er det
@@ -87,4 +93,11 @@ def R2(y, ytilde):
         u += (y[i] - ytilde[i])**2
         l += (y[i] - m)**2
     return 1 - u/l
+
+def Variance(X, n):
+    var = (1/n)*sum((X - np.mean(X))**2)
+    return var
+
+def ConfInt(conf, variance, n):
+    return conf*(np.sqrt(variance)/np.sqrt(n))
 """______________________________________________________________________________________________"""

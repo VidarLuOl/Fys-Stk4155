@@ -13,8 +13,10 @@ from random import random, seed
 n = 20          #Antall punkter i x- og y-retning på modellen
 noise = 0.1     #Hvor mye støy påvirker modellen 
 p = 5           #Grad av polynom
-s = 0.3         #Hvor vi skal splitte dataen
+s = 0.3         #Hvor stor del av dataen som skal være test
+conf = 1.96     #Confidence intervall, 95% her
 Opg = 1         #Hvilken Opg som skal kjøre
+prnt = 0        #Om du vil printe ut resultater. 0=nei, 1=ja
 
 """_________________________________________________________"""
 
@@ -28,24 +30,13 @@ noise_full = noise*np.random.randn(n, n)
 
 
 def Opg1():
-     z = np.ravel(FrankeFunction(x, y) + noise_full)
+    z = np.ravel(FrankeFunction(x, y) + noise_full)
 
-    MeanSE, R2_score, ztilde_plot = OLS(x, y, z, p, n)
+    OLS(x, y, z, p, n, s, noise, conf, prnt)
 
-    # print("Normal OLS")
-    # print("Grad = %i" %p)
-    # print("Antall undersøkt = %i" %n)
-    # print("MSE = %.6f" %MeanSE)
-    # print("R2 = %.6f" %R2_score)
+def Opg2():
+    z = 2
 
-    MeanSE, R2_score, ztilde_train, ztilde_test = Scaled_OSL(x, y, z, p, s)
-
-
-    # print("Skalert og trent OLS")
-    # print("Grad = %i" %p)
-    # print("Antall undersøkt = %i" %n)
-    # print("MSE = %.6f" %MeanSE)
-    # print("R2 = %.6f" %R2_score)
 
 
 if __name__ == "__main__":
@@ -53,3 +44,5 @@ if __name__ == "__main__":
         Opg1()
     elif(Opg == 2):
         Opg2()
+    else:
+        print("Du må velge en oppgave!")
