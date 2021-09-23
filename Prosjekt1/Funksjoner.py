@@ -13,7 +13,7 @@ def FrankeFunction(x,y):
     return term1 + term2 + term3 + term4
 
 
-def OLS(x, y, z, p, n, s, conf, prnt):
+def OLS(x, y, z, p, n, scom, conf, prnt):
     scaler = StandardScaler(with_std=False)
 
     plotMSETrain = np.zeros(p)
