@@ -13,14 +13,14 @@ def FrankeFunction(x,y):
     return term1 + term2 + term3 + term4
 
 
-def OLS(x, y, z, p, n, scom, conf, prnt):
+def OLS(x, y, z, p, n, s, conf, prnt):
     scaler = StandardScaler(with_std=False)
 
-    plotMSETrain = np.zeros(p)
-    plotMSETest = np.zeros(p)
+    # plotMSETrain = np.zeros(p)
+    # plotMSETest = np.zeros(p)
     
 
-    for i in range(0, p+1):
+    for i in range(1, p+1):
         XD = Design_X(x, y, i) #Designmatrisen blir laget her
 
         XD_train, XD_test, z_train, z_test = train_test_split(XD, z.reshape(-1,1), test_size=s)
@@ -40,8 +40,8 @@ def OLS(x, y, z, p, n, scom, conf, prnt):
         MeanSETrain = MSE(z_train, ztilde_train)
         MeanSETest = MSE(z_test, ztilde_test)
 
-        plotMSETrain[i-1] = MeanSETrain
-        plotMSETest[i-1] = MeanSETest
+        # plotMSETrain[i-1] = MeanSETrain
+        # plotMSETest[i-1] = MeanSETest
 
         R2_score = R2(z_train, ztilde_train)
 
@@ -57,11 +57,50 @@ def OLS(x, y, z, p, n, scom, conf, prnt):
             print("R2 = %.6f" %R2_score)
             print("")
 
-    plt.plot(range(0,p), plotMSETrain)
-    plt.plot(range(0,p), plotMSETest)
-    plt.show()
-    plt.errorbar(range(0,len(beta)), beta, beta_std, fmt="o")
-    plt.show()
+    # plt.plot(range(0,p), plotMSETrain)
+    # plt.plot(range(0,p), plotMSETest)
+    # plt.show()
+    # plt.errorbar(range(0,len(beta)), beta, beta_std, fmt="o")
+    # plt.show()
+
+def Bootstrap(x, y, z, p, n, s, conf, prnt):
+    scaler = StandardScaler(with_std=False)
+    
+
+    for i in range(1, p+1):
+        XD = Design_X(x, y, i) #Designmatrisen blir laget her
+
+        XD_train, XD_test, z_train, z_test = train_test_split(XD, z.reshape(-1,1), test_size=s)
+
+        scaler.fit(XD_train)
+        XD_train_scaled = scaler.transform(XD_train)
+        XD_test_scaled = scaler.transform(XD_test)
+
+        XD_train_scaled[:,0] = 1
+        XD_test_scaled[:,0] = 1
+        
+        beta = BetaFunc(XD_train_scaled, z_train) #Vi finner beta verdiene her
+
+        ztilde_train = XD_train_scaled @ beta
+        ztilde_test = XD_test_scaled @ beta
+
+        MeanSETrain = MSE(z_train, ztilde_train)
+        MeanSETest = MSE(z_test, ztilde_test)
+
+        R2_score = R2(z_train, ztilde_train)
+
+        beta_variance = Variance(XD_train_scaled, n)*np.diag(np.linalg.inv(XD_train_scaled.T @ XD_train_scaled))
+
+        beta_std = ConfInt(conf, beta_variance, n)
+
+        if(prnt == 1):
+            print("Skalert og trent OLS")
+            print("Grad = %i (p)" %i)
+            print("Antall undersøkt = %i (n)" %n)
+            print("MSE = %.6f" %MeanSETrain)
+            print("R2 = %.6f" %R2_score)
+            print("")
+
 
 """___________________________________OSL FUNKSJONER________________________________"""
 def Design_X(x, y, p):

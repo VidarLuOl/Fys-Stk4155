@@ -35,7 +35,9 @@ def Opg1():
     OLS(x, y, z, p, n, s, conf, prnt)
 
 def Opg2():
-    z = 2
+    z = np.ravel(FrankeFunction(x, y) + noise_full)
+
+    Bootstrap(x, y, z, p, n, s, conf, prnt)
 
 
 
