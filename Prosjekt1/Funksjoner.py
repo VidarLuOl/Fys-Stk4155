@@ -13,11 +13,11 @@ def FrankeFunction(x,y):
     return term1 + term2 + term3 + term4
 
 
-def OLS(x, y, z, p, n, s, conf, prnt):
+def OLS(x, y, z, p, n, s, conf, prnt, plot):
     scaler = StandardScaler(with_std=False)
 
-    # plotMSETrain = np.zeros(p)
-    # plotMSETest = np.zeros(p)
+    plotMSETrain = np.zeros(p)
+    plotMSETest = np.zeros(p)
     
 
     for i in range(1, p+1):
@@ -40,8 +40,8 @@ def OLS(x, y, z, p, n, s, conf, prnt):
         MeanSETrain = MSE(z_train, ztilde_train)
         MeanSETest = MSE(z_test, ztilde_test)
 
-        # plotMSETrain[i-1] = MeanSETrain
-        # plotMSETest[i-1] = MeanSETest
+        plotMSETrain[i-1] = MeanSETrain
+        plotMSETest[i-1] = MeanSETest
 
         R2_score = R2(z_train, ztilde_train)
 
@@ -57,14 +57,20 @@ def OLS(x, y, z, p, n, s, conf, prnt):
             print("R2 = %.6f" %R2_score)
             print("")
 
-    # plt.plot(range(0,p), plotMSETrain)
-    # plt.plot(range(0,p), plotMSETest)
-    # plt.show()
-    # plt.errorbar(range(0,len(beta)), beta, beta_std, fmt="o")
-    # plt.show()
+    if(plot == 1):
+        plt.plot(range(0,p), plotMSETrain)
+        plt.plot(range(0,p), plotMSETest)
+        plt.title("MSE of training and test set")
+        plt.show()
+        plt.title("Confidence intervall for the different betas")
+        plt.errorbar(range(0,len(beta)), beta, beta_std, fmt="o")
+        plt.show()
 
 def Bootstrap(x, y, z, p, n, s, conf, prnt):
     scaler = StandardScaler(with_std=False)
+
+    plotMSETrain = np.zeros(p)
+    plotMSETest = np.zeros(p)
     
 
     for i in range(1, p+1):
@@ -87,6 +93,9 @@ def Bootstrap(x, y, z, p, n, s, conf, prnt):
         MeanSETrain = MSE(z_train, ztilde_train)
         MeanSETest = MSE(z_test, ztilde_test)
 
+        plotMSETrain[i-1] = MeanSETrain
+        plotMSETest[i-1] = MeanSETest
+
         R2_score = R2(z_train, ztilde_train)
 
         beta_variance = Variance(XD_train_scaled, n)*np.diag(np.linalg.inv(XD_train_scaled.T @ XD_train_scaled))
@@ -101,8 +110,19 @@ def Bootstrap(x, y, z, p, n, s, conf, prnt):
             print("R2 = %.6f" %R2_score)
             print("")
 
+    if(plot == 1):
+        plt.plot(range(0,p), plotMSETrain)
+        plt.plot(range(0,p), plotMSETest)
+        plt.title("MSE of training and test set")
+        plt.show()
+        plt.title("Confidence intervall for the different betas")
+        plt.errorbar(range(0,len(beta)), beta, beta_std, fmt="o")
+        plt.show()
 
-"""___________________________________OSL FUNKSJONER________________________________"""
+
+
+
+"""___________________________________Mindre Funksjoner________________________________"""
 def Design_X(x, y, p):
     if len(x.shape)>1:
         x = np.ravel(x)
@@ -145,5 +165,5 @@ def Variance(X, n):
     return var
 
 def ConfInt(conf, variance, n):
-    return conf*(np.sqrt(variance)/np.sqrt(n))
+    return conf*(np.sqrt(variance)/np.sqrt(n)) #1.96*(sigma/sqrt(n))
 """______________________________________________________________________________________________"""
