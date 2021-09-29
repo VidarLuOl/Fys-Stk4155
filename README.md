@@ -8,7 +8,9 @@ Som den berømte Erna Solberg ein gong sa:
 # Prosjekt 1
 
 [Prosjekt1](https://compphysics.github.io/MachineLearning/doc/Projects/2021/Project1/pdf/Project1.pdf)
-[Overleaf]
+
+[Overleaf](https://www.overleaf.com/project/613f69c77de05db1b34e766b)
+
 ![Nerd](https://www.overleaf.com/project/613f69c77de05db1b34e766b)
 
 ## Opg.1
