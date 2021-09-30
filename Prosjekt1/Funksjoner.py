@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.utils import resample, shuffle
 import matplotlib.pyplot as plt
-# from seaborn import lineplot
+from seaborn import lineplot
 from random import choice
 
 def FrankeFunction(x,y):
@@ -52,9 +52,15 @@ def OLS(x, y, z, p, n, s, conf, prnt, plot):
         R2Test_score = R2(z_test, ztilde_test)
         #1- sum(y - model(y))^2/sum(y - mean(y))^2
 
-        beta_variance = Variance(XD_train_scaled, n)
+        print(np.shape(XD_train_scaled), n)
 
-        beta_ConfInt = ConfInt(conf, beta_variance, n)
+        # beta_variance = Variance(XD_train_scaled, n)
+
+        beta_variance = Variance(XD_train_scaled, np.shape(XD_train_scaled)[0])
+        beta_ConfInt = ConfInt(conf, beta_variance, np.shape(XD_train_scaled)[0])
+        # beta_ConfInt = ConfInt(conf, beta_variance, n)
+
+
 
         if(prnt == 1):
             print("Skalert og trent OLS")
@@ -66,8 +72,8 @@ def OLS(x, y, z, p, n, s, conf, prnt, plot):
             print("")
 
     if(plot == 1):
-        plt.plot(range(1,p+1), plotMSETrain)
-        plt.plot(range(1,p+1), plotMSETest)
+        plt.plot(range(1,p+1), plotMSETrain, label="Train")
+        plt.plot(range(1,p+1), plotMSETest, label="Test")
         plt.title("MSE of training and test set")
         plt.show()
         plt.title("Confidence intervall for the different betas")
@@ -89,6 +95,10 @@ def Bootstrap(x, y, z, p, n, s, bootNumber, bootSize, conf, prnt, plot):
 
     plotMSETrain = np.zeros(p)
     plotMSETest = np.zeros(p)
+
+    error = np.zeros(p)
+    bias = np.zeros(p)
+    vvariance = np.zeros(p)
         
 
     for i in range(1, p+1):
@@ -100,49 +110,66 @@ def Bootstrap(x, y, z, p, n, s, bootNumber, bootSize, conf, prnt, plot):
         XD_train_scaled = scaler.transform(XD_train)
         XD_test_scaled = scaler.transform(XD_test)
 
+        ztilde_BootTrain = np.zeros((len(z_train), bootNumber))
+        ztilde_BootTest = np.zeros((len(z_test), bootNumber))
+
         XD_train_scaled[:,0] = 1
         XD_test_scaled[:,0] = 1
 
         for j in range(0, bootNumber):
-            bootXTrain, bootYTrain = resample(XD_train_scaled, z_train, n_samples=bootSize, replace=True)
-            bootXTest, bootYTest = resample(XD_test_scaled, z_test, n_samples=bootSize, replace=True)
-            print(np.shape(bootXTrain))
+            bootXTrain, bootYTrain = resample(XD_train_scaled, z_train, replace=True)
+            bootXTest, bootYTest = resample(XD_test_scaled, z_test, replace=True)
 
             beta = BetaFunc(bootXTrain, bootYTrain) #Vi finner beta verdiene her
 
             ztilde_train = bootXTrain @ beta
             ztilde_test = bootXTest @ beta
 
+            ztilde_BootTest[:,j] = ztilde_test[:,0]
+            ztilde_BootTrain[:,j] = ztilde_train[:,0]
+
             MeanSETrain = MSE(bootYTrain, ztilde_train)
             MeanSETest = MSE(bootYTest, ztilde_test)
 
-            plotMSETrain[i-1] = MeanSETrain
-            plotMSETest[i-1] = MeanSETest
-
             R2_score = R2(z_train, bootYTrain)
 
-            beta_variance = Variance(bootXTrain, n)*np.diag(np.linalg.inv(bootXTrain.T @ bootXTrain))
+            beta_variance = Variance(XD_train_scaled, np.shape(XD_train_scaled)[0])
+            beta_ConfInt = ConfInt(conf, beta_variance, np.shape(XD_train_scaled)[0])
 
-            beta_std = ConfInt(conf, beta_variance, n)
-    
-            if(prnt == 1):
-                print("Skalert og trent OLS")
-                print("Grad = %i (p)" %i)
-                print("Antall undersøkt = %i (n)" %n)
-                print("MSE = %.6f" %MeanSETrain)
-                print("R2 = %.6f" %R2_score)
-                print("")
-        # bootMSE[i-1] = np.mean( np.mean((z_test - ztilde_train.reshape(100,8))**2, axis=1, keepdims=True))
-        # print(np.shape(ztilde_train.reshape(100,8)))
-        # print(bootMSE)
+            # beta_variance = Variance(bootXTrain, n)*np.diag(np.linalg.inv(bootXTrain.T @ bootXTrain))
+
+            # beta_std = ConfInt(conf, beta_variance, n)
+
+        plotMSETrain[i-1] = MeanSETrain
+        plotMSETest[i-1] = MeanSETest
+
+        error[i-1] = np.mean(np.mean((z_test - ztilde_BootTest)**2, axis=1, keepdims=True))
+        bias[i-1] = np.mean((z_test - np.mean(ztilde_BootTest, axis=1, keepdims=True))**2)
+        vvariance[i-1] = np.mean( np.var(ztilde_BootTest, axis=1, keepdims=True) )
+            
+        if(prnt == 1):
+            print("Skalert og trent OLS")
+            print("Grad = %i (p)" %i)
+            print("Antall undersøkt = %i (n)" %n)
+            print("MSE = %.6f" %MeanSETest)
+            print("R2 = %.6f" %R2_score)
+            print("Error = ", error[i-1])
+            print("Bias = ", bias[i-1])
+            print("Variance = ", vvariance[i-1])
+            print("")
 
     if(plot == 1):
-        plt.plot(range(1,p+1), plotMSETrain)
-        plt.plot(range(1,p+1), plotMSETest)
+        plt.plot(range(1,p+1), plotMSETrain, label="Train")
+        plt.plot(range(1,p+1), plotMSETest, label="Test")
         plt.title("MSE of training and test set")
         plt.show()
+        plt.plot(range(1,p+1), error, label="MSE")
+        plt.plot(range(1,p+1), bias, label="Bias")
+        plt.plot(range(1,p+1), vvariance, label="Variance")
+        plt.legend()
+        plt.show()
         plt.title("Confidence intervall for the different betas")
-        plt.errorbar(range(0,len(beta)), beta, beta_std, fmt="o")
+        plt.errorbar(range(0,len(beta)), beta, beta_ConfInt, fmt="o")
         plt.show()
 
 def CV(x, y, z, p, n, cvAntall, conf, prnt, plot):
@@ -191,13 +218,10 @@ def CV(x, y, z, p, n, cvAntall, conf, prnt, plot):
             meanMSEVectorTrain[j] = MeanSETrain
             meanMSEVectorTest[j] = MeanSETest
 
-
-
             R2_score = R2(z_train, ztilde_train)
 
-            beta_variance = Variance(XD_train_scaled, n)
-
-            beta_ConfInt = ConfInt(conf, beta_variance, n)
+            beta_variance = Variance(XD_train_scaled, np.shape(XD_train_scaled)[0])
+            beta_ConfInt = ConfInt(conf, beta_variance, np.shape(XD_train_scaled)[0])
 
             if(prnt == 1):
                 print("Skalert og trent OLS")
@@ -212,8 +236,8 @@ def CV(x, y, z, p, n, cvAntall, conf, prnt, plot):
         plotMSETest[i-1] = np.mean(meanMSEVectorTest)
 
     if(plot == 1):
-        plt.plot(range(1,p+1), plotMSETrain)
-        plt.plot(range(1,p+1), plotMSETest)
+        plt.plot(range(1,p+1), plotMSETrain, label="Train")
+        plt.plot(range(1,p+1), plotMSETest, label="Test")
         plt.title("MSE of training and test set")
         plt.show()
         plt.title("Confidence intervall for the different betas")
@@ -262,8 +286,7 @@ def R2(y, ytilde):
     return 1 - u/l
 
 def Variance(X, n):
-    var = (1/(n*n))*sum((X - np.mean(X))**2) * np.diag(np.linalg.pinv(X.T @ X))
-    # var = noise * np.diag(np.linalg.pinv(X.T @ X))
+    var = sum((X - np.mean(X))**2) * np.diag(np.linalg.pinv(X.T @ X))
     return var
 
 def ConfInt(conf, variance, n):

@@ -12,20 +12,20 @@ from random import random, seed
 
 
 """_________________________Variabler_______________________"""
-n = 25          #Antall punkter i x- og y-retning på modellen
+n = 20          #Antall punkter i x- og y-retning på modellen
 noise = 0.1     #Hvor mye støy påvirker modellen 
 p = 10           #Grad av polynom
 s = 0.3         #Hvor stor del av dataen som skal være test
 conf = 1.96     #Confidence intervall, 95% her
 
 "Opg 2"
-bootNumber = 2  #Antall bootstrap 
+bootNumber = 50  #Antall bootstrap 
 bootSize = 800  #Hvor mange punkter i hver bootstrap, minimum (2(1/2*(n-7)**2 + 1/2(n-7)) + 97) hvor n er antall punkter i XD
 
 "Opg 3"
 cvAntall = 10
 
-Opg = 3          #Hvilken Opg som skal kjøre
+Opg = 2         #Hvilken Opg som skal kjøre
 prnt = 1        #Om du vil printe ut resultater. 0=nei, 1=ja
 plot = 1        #Om du vil plotte ut resultater. 0=nei, 1=ja
 
