@@ -14,19 +14,22 @@ from random import random, seed
 """_________________________Variabler_______________________"""
 n = 20          #Antall punkter i x- og y-retning på modellen
 noise = 0.1     #Hvor mye støy påvirker modellen 
-p = 10           #Grad av polynom
+p = 9          #Grad av polynom
 s = 0.3         #Hvor stor del av dataen som skal være test
 conf = 1.96     #Confidence intervall, 95% her
+lamda = 1e-10   #Swag master 3000 verdier lizm
 
 "Opg 2"
-bootNumber = 50  #Antall bootstrap 
-bootSize = 800  #Hvor mange punkter i hver bootstrap, minimum (2(1/2*(n-7)**2 + 1/2(n-7)) + 97) hvor n er antall punkter i XD
+bootNumber = 100  #Antall bootstrap 
 
 "Opg 3"
 cvAntall = 10
 
-Opg = 2         #Hvilken Opg som skal kjøre
-prnt = 1        #Om du vil printe ut resultater. 0=nei, 1=ja
+"Hvilken oppgave vil du kjøre"
+Opg = 3         #Hvilken Opg som skal kjøre, 1 = OLS, 2 = Bootstrap, 3 = CV
+ridge = False   #Om du vil inkludere Ridge Regression på Frankefunksjonen
+lasso = False   #Om du vil inkludere Lasso Regression på Frankefunksjonen
+prnt = 0        #Om du vil printe ut resultater. 0=nei, 1=ja
 plot = 1        #Om du vil plotte ut resultater. 0=nei, 1=ja
 
 """_________________________________________________________"""
@@ -43,17 +46,17 @@ noise_full = noise*np.random.randn(n, n)
 def Opg1():
     z = np.ravel(FrankeFunction(x, y) + noise_full)
 
-    OLS(x, y, z, p, n, s, conf, prnt, plot)
+    OLS(x, y, z, p, n, s, bootNumber, conf, lamda, prnt, plot, ridge, lasso)
 
 def Opg2():
     z = np.ravel(FrankeFunction(x, y) + noise_full)
 
-    Bootstrap(x, y, z, p, n, s, bootNumber, bootSize, conf, prnt, plot)
+    Bootstrap(x, y, z, p, n, s, bootNumber, conf, lamda, prnt, plot, ridge, lasso)
 
 def Opg3():
     z = np.ravel(FrankeFunction(x, y) + noise_full)
 
-    CV(x, y, z, p, n, cvAntall, conf, prnt, plot)
+    CV(x, y, z, p, n, cvAntall, conf, lamda, prnt, plot, ridge, lasso)
 
 
 
