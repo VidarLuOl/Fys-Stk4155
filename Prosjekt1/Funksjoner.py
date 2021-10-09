@@ -1,10 +1,11 @@
 
 import numpy as np #For FrankeFunction, MSE, R2
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split
+import sklearn.linear_model as slm
 from sklearn.utils import resample, shuffle
 import matplotlib.pyplot as plt
-# from seaborn import lineplot
+from seaborn import lineplot
 from random import choice
 
 def FrankeFunction(x,y):
@@ -14,8 +15,7 @@ def FrankeFunction(x,y):
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
     return term1 + term2 + term3 + term4
 
-
-def OLS(x, y, z, p, n, s, conf, prnt, plot):
+def OLS(x, y, z, p, n, s, bootNumber, conf, lamda, prnt, plot, ridge, lasso):
     scaler = StandardScaler()
 
     plotMSETrain = np.zeros(p)
@@ -34,7 +34,7 @@ def OLS(x, y, z, p, n, s, conf, prnt, plot):
         XD_train_scaled[:,0] = 1
         XD_test_scaled[:,0] = 1
         
-        beta = BetaFunc(XD_train_scaled, z_train) #Vi finner beta verdiene her
+        beta = BetaFunc(XD_train_scaled, z_train, lamda, ridge, lasso) #Vi finner beta verdiene her
         #beta = (X^T * X)^-1 (X^T * y) 
 
         ztilde_train = XD_train_scaled @ beta
@@ -52,9 +52,15 @@ def OLS(x, y, z, p, n, s, conf, prnt, plot):
         R2Test_score = R2(z_test, ztilde_test)
         #1- sum(y - model(y))^2/sum(y - mean(y))^2
 
-        beta_variance = Variance(XD_train_scaled, n)
+        print(np.shape(XD_train_scaled), n)
 
-        beta_ConfInt = ConfInt(conf, beta_variance, n)
+        # beta_variance = Variance(XD_train_scaled, n)
+
+        beta_variance = Variance(XD_train_scaled, np.shape(XD_train_scaled)[0])
+        beta_ConfInt = ConfInt(conf, beta_variance, np.shape(XD_train_scaled)[0])
+        # beta_ConfInt = ConfInt(conf, beta_variance, n)
+
+
 
         if(prnt == 1):
             print("Skalert og trent OLS")
@@ -66,15 +72,15 @@ def OLS(x, y, z, p, n, s, conf, prnt, plot):
             print("")
 
     if(plot == 1):
-        plt.plot(range(1,p+1), plotMSETrain)
-        plt.plot(range(1,p+1), plotMSETest)
+        plt.plot(range(1,p+1), plotMSETrain, label="Train")
+        plt.plot(range(1,p+1), plotMSETest, label="Test")
         plt.title("MSE of training and test set")
         plt.show()
         plt.title("Confidence intervall for the different betas")
         plt.errorbar(range(0,len(beta)), beta, beta_ConfInt, fmt="o")
         plt.show()
 
-def Bootstrap(x, y, z, p, n, s, bootNumber, bootSize, conf, prnt, plot):
+def Bootstrap(x, y, z, p, n, s, bootNumber, conf, lamda, prnt, plot, ridge, lasso):
     """
     Størrelse på ulike variabler
     XD = (n*n, antall betaer)
@@ -84,12 +90,16 @@ def Bootstrap(x, y, z, p, n, s, bootNumber, bootSize, conf, prnt, plot):
     beta_variance= (antall beta, )
     """
     scaler = StandardScaler()
-    bootMSE = np.empty(p)
-    
+    bootMSETrain = np.empty(bootNumber)
+    bootMSETest = np.empty(bootNumber)
 
     plotMSETrain = np.zeros(p)
     plotMSETest = np.zeros(p)
-        
+
+    error = np.zeros(p)
+    bias = np.zeros(p)
+    vvariance = np.zeros(p)
+    R2_score = np.zeros(bootNumber)
 
     for i in range(1, p+1):
         XD = Design_X(x, y, i) #Designmatrisen blir laget her, (n*n, antall beta) matrix
@@ -100,125 +110,148 @@ def Bootstrap(x, y, z, p, n, s, bootNumber, bootSize, conf, prnt, plot):
         XD_train_scaled = scaler.transform(XD_train)
         XD_test_scaled = scaler.transform(XD_test)
 
+        ztilde_BootTrain = np.zeros((len(z_train), bootNumber))
+        ztilde_BootTest = np.zeros((len(z_test), bootNumber))
+
         XD_train_scaled[:,0] = 1
         XD_test_scaled[:,0] = 1
 
         for j in range(0, bootNumber):
-            bootXTrain, bootYTrain = resample(XD_train_scaled, z_train, n_samples=bootSize, replace=True)
-            bootXTest, bootYTest = resample(XD_test_scaled, z_test, n_samples=bootSize, replace=True)
-            print(np.shape(bootXTrain))
+            bootXTrain, bootZTrain = resample(XD_train_scaled, z_train, replace=True)
+            bootXTest, bootZTest = resample(XD_test_scaled, z_test, replace=True)
 
-            beta = BetaFunc(bootXTrain, bootYTrain) #Vi finner beta verdiene her
+            beta = BetaFunc(bootXTrain, bootZTrain, lamda, ridge, lasso) #Vi finner beta verdiene her
 
-            ztilde_train = bootXTrain @ beta
-            ztilde_test = bootXTest @ beta
+            if(lasso):
+                ztilde_train = beta.predict(bootXTrain)
+                ztilde_test = beta.predict(bootXTest)
+            else:
+                ztilde_train = bootXTrain @ beta
+                ztilde_test = bootXTest @ beta
 
-            MeanSETrain = MSE(bootYTrain, ztilde_train)
-            MeanSETest = MSE(bootYTest, ztilde_test)
+            ztilde_BootTest[:,j] = np.ravel(ztilde_test)
+            ztilde_BootTrain[:,j] = np.ravel(ztilde_train)
 
-            plotMSETrain[i-1] = MeanSETrain
-            plotMSETest[i-1] = MeanSETest
+            bootMSETrain[j] = MSE(bootZTrain, ztilde_train)
+            bootMSETest[j] = MSE(bootZTest, ztilde_test)
 
-            R2_score = R2(z_train, bootYTrain)
+            R2_score[j] = R2(bootZTest, ztilde_test)
 
-            beta_variance = Variance(bootXTrain, n)*np.diag(np.linalg.inv(bootXTrain.T @ bootXTrain))
+            beta_variance = Variance(bootXTrain, np.shape(bootXTrain)[0])
+            beta_ConfInt = ConfInt(conf, beta_variance, np.shape(bootXTrain)[0])
 
-            beta_std = ConfInt(conf, beta_variance, n)
-    
-            if(prnt == 1):
-                print("Skalert og trent OLS")
-                print("Grad = %i (p)" %i)
-                print("Antall undersøkt = %i (n)" %n)
-                print("MSE = %.6f" %MeanSETrain)
-                print("R2 = %.6f" %R2_score)
-                print("")
-        # bootMSE[i-1] = np.mean( np.mean((z_test - ztilde_train.reshape(100,8))**2, axis=1, keepdims=True))
-        # print(np.shape(ztilde_train.reshape(100,8)))
-        # print(bootMSE)
+        plotMSETrain[i-1] = np.mean(bootMSETrain)
+        plotMSETest[i-1] = np.mean(bootMSETest)
+
+        error[i-1] = np.mean(np.mean((z_test - ztilde_BootTest)**2, axis=1, keepdims=True))
+        bias[i-1] = np.mean((z_test - np.mean(ztilde_BootTest, axis=1, keepdims=True))**2)
+        vvariance[i-1] = np.mean(np.var(ztilde_BootTest, axis=1, keepdims=True))
+
+        if(prnt == 1):
+            print("Skalert og trent OLS")
+            print("Grad = %i (p)" %i)
+            print("Antall undersøkt = %i (n)" %n)
+            print("MSE = %.6f" %plotMSETest[i-1])
+            print("R2 = %.6f" %np.mean(R2_score))
+            print("Error = ", error[i-1])
+            print("Bias = ", bias[i-1])
+            print("Variance = ", vvariance[i-1])
+            print("")
 
     if(plot == 1):
-        plt.plot(range(1,p+1), plotMSETrain)
-        plt.plot(range(1,p+1), plotMSETest)
+        plt.plot(range(1,p+1), plotMSETrain, label="Train")
+        plt.plot(range(1,p+1), plotMSETest, label="Test")
         plt.title("MSE of training and test set")
         plt.show()
-        plt.title("Confidence intervall for the different betas")
-        plt.errorbar(range(0,len(beta)), beta, beta_std, fmt="o")
+        plt.plot(range(1,p+1), error, label="MSE")
+        plt.plot(range(1,p+1), bias, label="Bias")
+        plt.plot(range(1,p+1), vvariance, label="Variance")
+        plt.legend()
         plt.show()
+        if(lasso == False):
+            plt.title("Confidence intervall for the different betas")
+            plt.errorbar(range(0,len(beta)), beta, beta_ConfInt, fmt="o")
+            plt.show()
 
-def CV(x, y, z, p, n, cvAntall, conf, prnt, plot):
+def CV(x, y, z, p, n, cvAntall, conf, lamda, prnt, plot, ridge, lasso):
     scaler = StandardScaler()
 
     plotMSETrain = np.zeros(p)
     plotMSETest = np.zeros(p)
 
-    for i in range(1, p+1):
-        XD = Design_X(x, y, i) #Designmatrisen blir laget her
-        meanMSEVectorTrain = np.zeros(cvAntall)
-        meanMSEVectorTest = np.zeros(cvAntall)
+    for k in [1e-1, 1e-3, 1e-5, 1e-7, 1e-9, 1e-11, 1e-13]:
+        lamda = k
+        for i in range(1, p+1):
+            XD = Design_X(x, y, i) #Designmatrisen blir laget her
+            meanMSEVectorTrain = np.zeros(cvAntall)
+            meanMSEVectorTest = np.zeros(cvAntall)
 
-        XD_random, z_random = shuffle(XD, z)
+            XD_random, z_random = shuffle(XD, z)
 
-        XDVector = np.array_split(XD_random, cvAntall)
-        zVector = np.array_split(z_random, cvAntall)   #Splitter inn i like store grupper
+            XDVector = np.array_split(XD_random, cvAntall)
+            zVector = np.array_split(z_random, cvAntall)   #Splitter inn i like store grupper
 
+            
+            for j in range(0, cvAntall):
+                XD_train = XDVector[:j] + XDVector[j+1:] 
+                XD_train = [j for i in XD_train for j in i]
+                XD_test = XDVector[j]
+                z_train = zVector[:j] + zVector[j+1:]
+                z_train = [j for i in z_train for j in i]
+                z_test = zVector[j]
+
+                scaler.fit(XD_train)
+
+                XD_train_scaled = scaler.transform(XD_train)
+                XD_test_scaled = scaler.transform(XD_test)
+
+                XD_train_scaled[:,0] = 1
+                XD_test_scaled[:,0] = 1
+
+                beta = BetaFunc(XD_train_scaled, z_train, lamda, ridge, lasso) 
         
-        for j in range(0, cvAntall):
-            XD_train = XDVector[:j] + XDVector[j+1:] 
-            XD_train = [j for i in XD_train for j in i]
-            XD_test = XDVector[j]
-            z_train = zVector[:j] + zVector[j+1:]
-            z_train = [j for i in z_train for j in i]
-            z_test = zVector[j]
+                if(lasso):
+                    ztilde_train = beta.predict(XD_train_scaled)
+                    ztilde_test = beta.predict(XD_test_scaled)
+                else:
+                    ztilde_train = XD_train_scaled @ beta
+                    ztilde_test = XD_test_scaled @ beta
 
-            scaler.fit(XD_train)
+                MeanSETrain = MSE(z_train, ztilde_train)
+                MeanSETest = MSE(z_test, ztilde_test)
 
-            XD_train_scaled = scaler.transform(XD_train)
-            XD_test_scaled = scaler.transform(XD_test)
+                meanMSEVectorTrain[j] = MeanSETrain
+                meanMSEVectorTest[j] = MeanSETest
 
-            XD_train_scaled[:,0] = 1
-            XD_test_scaled[:,0] = 1
+                R2_score = R2(z_train, ztilde_train)
 
-            beta = BetaFunc(XD_train_scaled, z_train)
+                beta_variance = Variance(XD_train_scaled, np.shape(XD_train_scaled)[0])
+                beta_ConfInt = ConfInt(conf, beta_variance, np.shape(XD_train_scaled)[0])
 
-            ztilde_train = XD_train_scaled @ beta
-            ztilde_test = XD_test_scaled @ beta
+                if(prnt == 1):
+                    print("Skalert og trent OLS")
+                    print("Grad = %i (p)" %i)
+                    print("Antall undersøkt = %i (n)" %n)
+                    print("MSE = %.6f" %MeanSETrain)
+                    print("R2 = %.6f" %R2_score)
+                    print("")
 
-            MeanSETrain = MSE(z_train, ztilde_train)
-            MeanSETest = MSE(z_test, ztilde_test)
+            plotMSETrain[i-1] = np.mean(meanMSEVectorTrain)
+            plotMSETest[i-1] = np.mean(meanMSEVectorTest)
 
-            cross_val_score(beta, XD, y, cv=cvAntall)
-
-            meanMSEVectorTrain[j] = MeanSETrain
-            meanMSEVectorTest[j] = MeanSETest
-
-
-
-            R2_score = R2(z_train, ztilde_train)
-
-            beta_variance = Variance(XD_train_scaled, n)
-
-            beta_ConfInt = ConfInt(conf, beta_variance, n)
-
-            if(prnt == 1):
-                print("Skalert og trent OLS")
-                print("Grad = %i (p)" %i)
-                print("Antall undersøkt = %i (n)" %n)
-                print("MSE = %.6f" %MeanSETrain)
-                # print("Sklearn MSE = %.6f" %cross_val_score(beta, XD, y, cv=cvAntall))
-                print("R2 = %.6f" %R2_score)
-                print("")
-
-        plotMSETrain[i-1] = np.mean(meanMSEVectorTrain)
-        plotMSETest[i-1] = np.mean(meanMSEVectorTest)
-
-    if(plot == 1):
-        plt.plot(range(1,p+1), plotMSETrain)
-        plt.plot(range(1,p+1), plotMSETest)
-        plt.title("MSE of training and test set")
-        plt.show()
-        plt.title("Confidence intervall for the different betas")
-        plt.errorbar(range(0,len(beta)), beta, beta_ConfInt, fmt="o")
-        plt.show()
+        if(plot == 1):
+            # plt.plot(range(1,p+1), plotMSETrain, label="Train")
+            plt.plot(range(1,p+1), plotMSETest, label=("lambda = ", lamda))
+            # plt.title("MSE of training and test set")
+            # plt.show()
+            # plt.title("Confidence intervall for the different betas")
+            # if(lasso):
+            #     plt.errorbar(range(0,len(beta.coef_)), beta.coef_, 1, fmt="o")
+            # else:
+            #     plt.errorbar(range(0,len(beta)), beta, beta_ConfInt, fmt="o")
+            # plt.show()
+    plt.legend()
+    plt.show()
 
 
 
@@ -239,8 +272,13 @@ def Design_X(x, y, p):
             X[:,q+k] = x**(i-k)*y**k    #using the binomial theorem to get the right exponents
     return X
 
-def BetaFunc(X, y):
-    return np.linalg.inv(X.T @ X) @ (X.T @ y)
+def BetaFunc(X, z, lamda, ridge, lasso):
+    if(ridge == True):
+        return np.linalg.inv(X.T @ X + lamda*np.identity(len(X[0]))) @ (X.T @ z)
+    elif(lasso == True):
+        return slm.Lasso(alpha = lamda).fit(X, z)
+    else:
+        return np.linalg.inv(X.T @ X) @ (X.T @ z)
 
 def MSE(y, ytilde):
     #MSE er når vi skal sjekke hvor nøyaktig modellen vi har lagd er iforhold til punktene vi har fått inn
@@ -253,17 +291,10 @@ def MSE(y, ytilde):
 
 def R2(y, ytilde):
     #R2 er en skala mellom 0 og 1, hvor jo nærmere 1 enn er jo bedre er det
-    u = 0
-    l = 0
-    m = np.mean(y)
-    for i in range(0, np.size(y)-1):
-        u += (y[i] - ytilde[i])**2
-        l += (y[i] - m)**2
-    return 1 - u/l
+    return 1 - np.sum((y - ytilde) ** 2) / np.sum((y - np.mean(y)) ** 2)
 
 def Variance(X, n):
-    var = (1/(n*n))*sum((X - np.mean(X))**2) * np.diag(np.linalg.pinv(X.T @ X))
-    # var = noise * np.diag(np.linalg.pinv(X.T @ X))
+    var = sum((X - np.mean(X))**2) * np.diag(np.linalg.pinv(X.T @ X))
     return var
 
 def ConfInt(conf, variance, n):
