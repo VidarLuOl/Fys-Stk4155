@@ -79,13 +79,6 @@ for _ in range(nlambdas):
 
 
 plt.figure()
-plt.title("MSE ridge regression")
-plt.semilogy(lambdas,mse_train)
-plt.semilogy(lambdas,mse_test)
-plt.legend(["mse training", "mse test"])
-plt.show()
-
-plt.figure()
 plt.title("ridge regression")
 plt.semilogy(lambdas,error, "o", label="error", color = "r")
 plt.semilogy(lambdas,error,color = "r")

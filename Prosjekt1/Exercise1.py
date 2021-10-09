@@ -1,5 +1,5 @@
 import numpy as np
-from Functions import datapoints, create_X, beta#, OLS
+from Functions import datapoints, create_X, beta
 from Funksjoner import Variance
 
 import matplotlib.pyplot as plt

@@ -54,11 +54,11 @@ def lassoRegression(x,y,z, order, lamb, nlambdas):
 
 
 
-nlambdas = 13
-lam_high = 0.5
+nlambdas = 16
+lam_high = 5
 lam_low = -12
 lambdas = np.logspace(lam_low, lam_high, nlambdas)
-order = 15
+order = 8
 
 polynomials = np.linspace(1,order,order)
 
@@ -71,6 +71,7 @@ msetrain = []
 msetest = []
 r2test = []
 r2train = []
+
 
 for p in lambdas:
     data = lassoRegression(x,y,z,order,p, nlambdas)
