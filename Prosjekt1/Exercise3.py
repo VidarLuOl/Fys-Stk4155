@@ -1,5 +1,5 @@
 import numpy as np
-from Functions import datapoints, OLS, bootstrap_OLS, create_X, beta#, cross_validation
+from Functions import datapoints, OLS, bootstrapOLS, create_X, beta
 import matplotlib.pyplot as plt
 import random as random
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
@@ -97,19 +97,27 @@ r2test = [np.mean(r2test[_]) for _ in range(maxdegree)]
 
 polynoms = np.linspace(1,maxdegree, maxdegree)
 
-plt.figure()          
-plt.plot(polynoms,msetrain)                
-plt.plot(polynoms,msetest)
-plt.legend(["mse train", "mse test"])    
+plt.figure()         
+plt.title("MSE kFold OLS") 
+plt.plot(polynoms,msetrain, label = "MSE train", color = "r")                
+plt.plot(polynoms,msetest, label = "MSE test", color = "b")
+plt.plot(polynoms,msetrain, "o", color = "r")                
+plt.plot(polynoms,msetest, "o", color = "b")  
 plt.xlabel("order")
 plt.ylabel("mse")
+plt.legend()
 plt.show()  
     
-plt.figure()                          
-plt.plot(polynoms,r2train)                
-plt.plot(polynoms,r2test)
-plt.legend(["r2 train", "r2 test"])    
-plt.show()  
+plt.figure()         
+plt.title("R2 kFold OLS") 
+plt.plot(polynoms,r2train, label = "R2 train", color = "r")                
+plt.plot(polynoms,r2test, label = "R2 test", color = "b")
+plt.plot(polynoms,r2train, "o", color = "r")                
+plt.plot(polynoms,r2test, "o", color = "b")  
+plt.xlabel("order")
+plt.ylabel("R2")
+plt.legend()
+plt.show() 
 
 
     

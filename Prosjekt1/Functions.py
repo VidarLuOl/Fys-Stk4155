@@ -88,7 +88,7 @@ def OLS(x,y,z,order):
     return data
 
 
-def OLS_sklearn(x,y,z,order):
+def OLSSklearn(x,y,z,order):
     X = create_X(x, y, order)
     z_ravel = np.ravel(z)     
     X_train, X_test, z_train, z_test = train_test_split(X, z_ravel, test_size=0.20)
@@ -139,7 +139,7 @@ def boot(data, datapoints):
     #print("%8g %8g %14g %15g" % (np.mean(data), np.std(data),np.mean(t),np.std(t)))
     return t  
     
-def bootstrap_OLS(x,y,z, maxdegree, n_bootstraps):
+def bootstrapOLS(x,y,z, maxdegree, n_bootstraps):
     error = np.zeros(maxdegree)
     bias = np.zeros(maxdegree)
     variance = np.zeros(maxdegree)
@@ -187,7 +187,7 @@ def bootstrap_OLS(x,y,z, maxdegree, n_bootstraps):
         """
     return error, bias, variance, polydegree
 
-def bootstrap_Ridge(x,y,z, degree, n_bootstraps, lamb_low, lamb_high, nlambdas):
+def bootstrapRidge(x,y,z, degree, n_bootstraps, lamb_low, lamb_high, nlambdas):
     error = np.zeros(nlambdas)
     bias = np.zeros(nlambdas)
     variance = np.zeros(nlambdas)

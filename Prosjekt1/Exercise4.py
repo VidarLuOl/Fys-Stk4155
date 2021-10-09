@@ -42,17 +42,24 @@ def ridgeRegression(x,y,z,order,lamb):
     R2_test_scale = r2_score(z_pred, z_test)
     
     
+    error = np.mean(np.mean((z_test - z_pred)**2))
+    bias = np.mean((z_test - np.mean(z_pred)))
+    variance = np.mean(np.var(z_pred))
+    
     data =  MSE_train_scale, MSE_test_scale, \
             R2_train_scale, R2_test_scale, \
             coefs, X_train_scale, X_test_scale, z_train, z_test
             
-    return data
+    return data, error, bias, variance
 
 
 mse_train = []
 mse_test = []
 r2_train = []
 r2_test = []
+error = []
+bias = []
+variance = []
 
 nlambdas = 50
 lam = 0.5
@@ -61,30 +68,45 @@ order = 8
 polynomials = np.linspace(1,order,order)
 
 for _ in range(nlambdas):
-    data = ridgeRegression(x,y,z,order,lambdas[_])
-    #print(data[5][0])
-    i,j,k,l = data[0], data[1], data[2], data[3]
-    mse_train.append(i)
-    mse_test.append(j)
-    r2_train.append(k)
-    r2_test.append(l)
+    data, err, bi, var = ridgeRegression(x,y,z,order,lambdas[_])
+    mse_train.append(data[0])
+    mse_test.append(data[1])
+    r2_train.append(data[2])
+    r2_test.append(data[3])
+    error.append(err)
+    bias.append(bi)
+    variance.append(var)
 
-"""
+
 plt.figure()
+plt.title("MSE ridge regression")
 plt.semilogy(lambdas,mse_train)
 plt.semilogy(lambdas,mse_test)
 plt.legend(["mse training", "mse test"])
 plt.show()
-"""
+
+plt.figure()
+plt.title("ridge regression")
+plt.semilogy(lambdas,error, "o", label="error", color = "r")
+plt.semilogy(lambdas,error,color = "r")
+plt.semilogy(lambdas,bias, "o", label="bias", color = "g")
+plt.semilogy(lambdas,bias, color = "g")
+plt.semilogy(lambdas,variance, "o", label="variance", color = "b")
+plt.semilogy(lambdas,variance, color = "b")
+plt.legend()
+plt.show()
+
 
 n_bootstraps = 150
 
 nlambdas = 13
 lam_high = 0.5
 lam_low = -12
-order = 5
+order = 15
 
-for i in range(5,15):
+p = [7, 8, 9, 14]
+"""
+for i in p:
     err,bi,var, xaxis = bootstrapRidge(x,y,z, i, n_bootstraps, lam_low, lam_high, nlambdas)
     
     plt.figure()
@@ -94,4 +116,4 @@ for i in range(5,15):
     plt.semilogy(xaxis, var, label='Variance')
     plt.legend()
     plt.show()
-
+"""

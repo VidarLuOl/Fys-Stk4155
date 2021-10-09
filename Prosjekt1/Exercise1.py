@@ -64,7 +64,7 @@ for p in range(1,order+1):
     r2_test.append(l)
     print("Polynom: %.f | MSE train: %.3f | MSE test: %.3f | R2 train: %.3f | R2 test: %.3f" %(p,i,j,k,l))
 
-
+"""
 plt.figure()
 plt.title("mse")
 plt.semilogy(polynomials,mse_train)
@@ -76,4 +76,27 @@ plt.title("r2")
 plt.plot(polynomials,r2_train)
 plt.plot(polynomials,r2_test)        
 plt.show()
+"""
 
+
+plt.figure()
+plt.title("mse OLS")
+plt.semilogy(polynomials,mse_train, "o", label = "mse train", color = "r")
+plt.semilogy(polynomials,mse_train, color = "r")
+plt.semilogy(polynomials,mse_test, "o", label = "mse test", color = "b")
+plt.semilogy(polynomials,mse_test, color = "b")
+plt.xlabel("order")
+plt.ylabel("MSE")
+plt.legend()
+plt.show()
+
+plt.figure()
+plt.title("R2 OLS")
+plt.plot(polynomials,r2_train, "o", label = "R2 train", color = "r")
+plt.plot(polynomials,r2_train, color = "r")
+plt.plot(polynomials,r2_test, "o", label = "R2 test", color = "b")
+plt.plot(polynomials,r2_test, color = "b")
+plt.xlabel("order")
+plt.ylabel("R2")
+plt.legend()
+plt.show()
