@@ -10,11 +10,7 @@ from sklearn import linear_model
 
 x,y,z = datapoints()
 
-def lassoRegression(x,y,z, order, lamb, nlambdas):
-    error = np.zeros(nlambdas)
-    bias = np.zeros(nlambdas)
-    variance = np.zeros(nlambdas)
-    
+def lassoRegression(x,y,z, order, lamb, nlambdas):    
     X = create_X(x, y, order)
     z_ravel = np.ravel(z)
 
@@ -35,70 +31,59 @@ def lassoRegression(x,y,z, order, lamb, nlambdas):
     z_mean_test = np.mean(z_test)
     z_train = (z_train - z_mean_test)/np.std(z_test)
     
-    RegLasso = linear_model.Lasso(lamb)
+    RegLasso = linear_model.Lasso(lamb,fit_intercept=False)
     RegLasso.fit(X_train_scale,z_train)
     
-    z_tilde = RegLasso.predict(X_train)
+    #z_tilde = RegLasso.predict(X_train)
     z_pred = RegLasso.predict(X_test)
-    #coefs = RegLasso.coef_
+    coefs = RegLasso.coef_
+
 
     
-    MSE_train_scale = mean_squared_error(z_tilde, z_train)
-    MSE_test_scale = mean_squared_error(z_pred, z_test)
-    
-    R2_train_scale = r2_score(z_tilde, z_train)
-    R2_test_scale = r2_score(z_pred, z_test)
-    
-    
-    print(np.shape(z_pred), np.shape(z_test))
-    
-    error[nlambdas] = np.mean( np.mean((z_test - z_pred)**2, axis=1, keepdims=True) )
-    bias[nlambdas] = np.mean( (z_test - np.mean(z_pred, axis=1, keepdims=True))**2 )
-    variance[nlambdas] = np.mean( np.var(z_pred, axis=1, keepdims=True) )
+    error = np.mean(np.mean((z_test - z_pred)**2))
+    bias = np.mean((z_test - np.mean(z_pred)))
+    variance = np.mean(np.var(z_pred))
             
-    return error, bias, variance
+    return error, bias, variance, coefs
 
 
-
-mse_train = []
-mse_test = []
-r2_train = []
-r2_test = []
 
 
 nlambdas = 13
 lam_high = 0.5
 lam_low = -12
 lambdas = np.logspace(lam_low, lam_high, nlambdas)
-order = 15
+order = 10
 polynomials = np.linspace(1,order,order)
 
 
-mse_train = []
-mse_test = []
-r2_train = []
-r2_test = []
-
+error = []
+bias = []
+variance = []
+coefs = []
 
 for p in lambdas:
     data = lassoRegression(x,y,z,order,p, nlambdas)
-    i,j,k,l = data[0], data[1], data[2], data[3]
-    mse_train.append(i)
-    mse_test.append(j)
-    r2_train.append(k)
-    r2_test.append(l)
-
-
-plt.figure()
-plt.title("mse")
-plt.plot(np.log10(lambdas),mse_train)
-plt.plot(np.log10(lambdas),mse_test)
-plt.show()
+    i,j,k,l  = data[0], data[1], data[2], data[3]
+    error.append(i)
+    bias.append(j)
+    variance.append(k)
+    coefs.append(l)
 
 """
 plt.figure()
-plt.title("r2")
-plt.plot(np.log10(lambdas),r2_train)
-plt.plot(np.log10(lambdas),r2_test)    
+plt.title("lasso regression")
+plt.plot(np.log10(lambdas),error, label="error")
+plt.plot(np.log10(lambdas),bias, label="bias")
+plt.plot(np.log10(lambdas),variance, label="variance")
+plt.show()
+"""
+
+"""
+plt.figure()
+plt.title("lasso regression")
+plt.plot(lambdas,error, label="error")
+plt.plot(lambdas,bias, label="bias")
+plt.plot(lambdas,variance, label="variance")
 plt.show()
 """
