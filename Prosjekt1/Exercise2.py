@@ -33,9 +33,13 @@ maxdegree = 15
 err,bi,var,polydeg = bootstrap_OLS(x,y,z, maxdegree, n_bootstraps)
 
 plt.figure()
-plt.semilogy(polydeg, err, label='Error')
-plt.semilogy(polydeg, bi, label='bias')
-plt.semilogy(polydeg, var, label='Variance')
+plt.semilogy(polydeg, err, label='Error', color = "r")
+plt.semilogy(polydeg, bi, label='bias', color = "g")
+plt.semilogy(polydeg, var, label='Variance', color = "b")
+
+plt.semilogy(polydeg, err, "o", color = "r")
+plt.semilogy(polydeg, bi, "o", color = "g")
+plt.semilogy(polydeg, var, "o", color = "b")
 plt.legend()
 plt.show()
 
