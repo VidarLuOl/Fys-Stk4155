@@ -59,7 +59,7 @@ def plotOLS(x,y,z):
 
 def plotOLSBootrstrap(x,y,z):
     n_bootstraps = 250
-    maxdegree = 15
+    maxdegree = 16
         
     err,bi,var,polydeg = bootstrapOLS(x,y,z, maxdegree, n_bootstraps)
     
@@ -194,7 +194,7 @@ def plotLasso(x,y,z):
 def plotLassoBootstrap(x,y,z):
     n_bootstraps = 500
     
-    nlambdas = 13
+    nlambdas = 27
     lam_high = 1
     lam_low = -12
     order = 5
@@ -222,15 +222,12 @@ x,y,z = dataTerrain(terrain1)
 
 
 #plotOLS(x, y, z)
+#plotOLSBootrstrap(x, y, z)
 
-"""
-plotOLSBootrstrap(x, y, z)
 plotRidge(x, y, z)
 plotRidgeBootstrap(x, y, z)
 plotLasso(x, y, z)
-"""
-plotLassoBootstrap(x, y, z)
-
+#plotLassoBootstrap(x, y, z)
 
 """______________________________terrain2______________________________"""
 

@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 
 x,y,z = datapoints()
 
-order = 7
+order = 11
 polynomials = np.linspace(1,order,order)
 
 def OLS(x,y,z,order):

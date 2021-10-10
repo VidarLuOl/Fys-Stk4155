@@ -24,7 +24,7 @@ plt.grid(True)
 plt.show()
 """
 
-n_bootstraps = 250
+n_bootstraps = 650
 maxdegree = 15
     
 err,bi,var,polydeg = bootstrapOLS(x,y,z, maxdegree, n_bootstraps)

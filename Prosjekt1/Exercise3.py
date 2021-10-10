@@ -69,11 +69,6 @@ def OLSkFold(x,y,z, maxdegree, kfold):
             
             R2_train = r2_score(z_fit, z_train)
             R2_test = r2_score(z_pred, z_test)
-            
-            #mse_train[i][degree] = MSE_train
-            #mse_test[i][degree] = MSE_test
-            #r2_train[i][degree] = R2_train
-            #r2_test[i][degree] = R2_test 
 
             mse_train[degree][i] = MSE_train
             mse_test[degree][i] = MSE_test
