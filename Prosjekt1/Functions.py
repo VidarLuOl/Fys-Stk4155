@@ -1,7 +1,7 @@
 #Functions
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
@@ -10,7 +10,7 @@ from sklearn.utils import resample
 
 
 def datapoints():
-    #np.random.seed(20)
+    np.random.seed(124)
     N = 25
     dt = float(1/N)
     x = np.arange(0, 1, dt)
@@ -83,12 +83,12 @@ def OLS(x,y,z,order):
     
     data =  MSE_train_scale, MSE_test_scale, \
             R2_train_scale, R2_test_scale, \
-            coefs, X_train_scale, X_test_scale, z_train, z_test
+            coefs, X_train_scale, X_test_scale, z_train, z_test, z_fit, z_pred
             
     return data
 
 
-def OLSSklearn(x,y,z,order):
+def olsSklearn(x,y,z,order):
     X = create_X(x, y, order)
     z_ravel = np.ravel(z)     
     X_train, X_test, z_train, z_test = train_test_split(X, z_ravel, test_size=0.20)
@@ -125,7 +125,88 @@ def OLSSklearn(x,y,z,order):
 
 
 
+def ridgeRegression(x,y,z,order,lamb):
+    X = create_X(x, y, order)
+    z_ravel = np.ravel(z)
+
+    X_train, X_test, z_train, z_test = train_test_split(X, z_ravel, test_size=0.20)
     
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+    
+    X_train_scale = scaler.transform(X_train)
+    X_test_scale = scaler.transform(X_test)
+
+    z_mean_train = np.mean(z_train)
+    z_train = (z_train - z_mean_train)/np.std(z_train)
+    
+    z_mean_test = np.mean(z_test)
+    z_train = (z_train - z_mean_test)/np.std(z_test)
+    
+    coefs = ridge(X_train_scale, z_train, lamb)
+    
+    z_fit = X_train_scale.dot(coefs)
+    z_pred = X_test_scale.dot(coefs)
+    
+    
+    MSE_train_scale = mean_squared_error(z_fit, z_train)
+    MSE_test_scale = mean_squared_error(z_pred, z_test)
+    
+    R2_train_scale = r2_score(z_fit, z_train)
+    R2_test_scale = r2_score(z_pred, z_test)
+    
+    
+    error = np.mean(np.mean((z_test - z_pred)**2))
+    bias = np.mean((z_test - np.mean(z_pred)))
+    variance = np.mean(np.var(z_pred))
+    
+    data =  MSE_train_scale, MSE_test_scale, \
+            R2_train_scale, R2_test_scale, \
+            coefs, X_train_scale, X_test_scale, z_train, z_test
+            
+    return data, error, bias, variance
+
+    
+def lassoRegression(x,y,z, order, lamb, nlambdas):    
+    X = create_X(x, y, order)
+    z_ravel = np.ravel(z)
+
+    X_train, X_test, z_train, z_test = train_test_split(X, z_ravel, test_size=0.20)
+    
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+    
+    X_train_scale = scaler.transform(X_train)
+    X_test_scale = scaler.transform(X_test)
+    
+    X_train_scale[:,0] = 1
+    X_test_scale[:,0] = 1
+    
+    z_mean_train = np.mean(z_train)
+    z_train = (z_train - z_mean_train)/np.std(z_train)
+    
+    z_mean_test = np.mean(z_test)
+    z_train = (z_train - z_mean_test)/np.std(z_test)
+    
+    RegLasso = Lasso(lamb,fit_intercept=False)
+    RegLasso.fit(X_train_scale,z_train)
+    
+    z_tilde = RegLasso.predict(X_train)
+    z_pred = RegLasso.predict(X_test)
+    coefs = RegLasso.coef_
+
+    MSE_train_scale = mean_squared_error(z_tilde, z_train)
+    MSE_test_scale = mean_squared_error(z_pred, z_test)
+    
+    R2_train_scale = r2_score(z_tilde, z_train)
+    R2_test_scale = r2_score(z_pred, z_test)
+
+    
+    error = np.mean(np.mean((z_test - z_pred)**2))
+    bias = np.mean((z_test - np.mean(z_pred)))
+    variance = np.mean(np.var(z_pred))
+            
+    return error, bias, variance, coefs, MSE_train_scale, MSE_test_scale, R2_train_scale, R2_test_scale
     
 def boot(data, datapoints):
     t = np.zeros(datapoints)
@@ -178,13 +259,6 @@ def bootstrapOLS(x,y,z, maxdegree, n_bootstraps):
         bias[degree] = np.mean( (Z_test - np.mean(z_pred, axis=1, keepdims=True))**2 )
         variance[degree] = np.mean( np.var(z_pred, axis=1, keepdims=True) )
         
-        """
-        print('Polynomial degree:', degree)
-        print('Error:', error[degree])
-        print('Bias^2:', bias[degree])
-        print('Var:', variance[degree])
-        print('{} >= {} + {} = {}'.format(error[degree], bias[degree], variance[degree], bias[degree]+variance[degree]))
-        """
     return error, bias, variance, polydegree
 
 def bootstrapRidge(x,y,z, degree, n_bootstraps, lamb_low, lamb_high, nlambdas):
@@ -228,13 +302,52 @@ def bootstrapRidge(x,y,z, degree, n_bootstraps, lamb_low, lamb_high, nlambdas):
         bias[lam] = np.mean( (Z_test - np.mean(z_pred, axis=1, keepdims=True))**2 )
         variance[lam] = np.mean( np.var(z_pred, axis=1, keepdims=True) )
         
-        """
-        print('Polynomial degree:', degree)
-        print('Error:', error[degree])
-        print('Bias^2:', bias[degree])
-        print('Var:', variance[degree])
-        print('{} >= {} + {} = {}'.format(error[degree], bias[degree], variance[degree], bias[degree]+variance[degree]))
-        """
+    return error, bias, variance, np.linspace(lamb_low, lamb_high, nlambdas)
+
+
+def bootstrapLasso(x,y,z, degree, n_bootstraps, lamb_low, lamb_high, nlambdas):
+    error = np.zeros(nlambdas)
+    bias = np.zeros(nlambdas)
+    variance = np.zeros(nlambdas)
+    lambdas = np.logspace(lamb_low, lamb_high, nlambdas)
+    
+    for lam in range(nlambdas):
+        X = create_X(x, y, degree)
+        z_ravel = np.ravel(z)
+    
+        X_train, X_test, z_train, z_test = train_test_split(X, z_ravel, test_size=0.20)
+        
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        
+        X_train_scale = scaler.transform(X_train)
+        #X_test_scale = scaler.transform(X_test)
+    
+        z_mean_train = np.mean(z_train)
+        z_train = (z_train - z_mean_train)/np.std(z_train)
+        
+        z_mean_test = np.mean(z_test)
+        z_train = (z_train - z_mean_test)/np.std(z_test)
+        
+        z_pred = np.empty((z_test.shape[0], n_bootstraps))
+        Z_test = z_pred.copy()
+        
+
+        RegLasso = Lasso(lambdas[lam],fit_intercept=False)
+        
+
+        for i in range(n_bootstraps):
+            x_, z_ = resample(X_train_scale, z_train)
+            RegLasso.fit(x_, z_)
+            z_pred[:, i] = RegLasso.predict(X_test)
+            Z_test[:, i] = z_test  
+            
+    
+    
+        error[lam] = np.mean( np.mean((Z_test - z_pred)**2, axis=1, keepdims=True) )
+        bias[lam] = np.mean( (Z_test - np.mean(z_pred, axis=1, keepdims=True))**2 )
+        variance[lam] = np.mean( np.var(z_pred, axis=1, keepdims=True) )
+        
     return error, bias, variance, np.linspace(lamb_low, lamb_high, nlambdas)
 
 def SVD(A):

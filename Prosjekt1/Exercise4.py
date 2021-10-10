@@ -61,7 +61,7 @@ error = []
 bias = []
 variance = []
 
-nlambdas = 50
+nlambdas = 25
 lam = 0.5
 lambdas = np.logspace(-lam, lam, nlambdas)
 order = 8
@@ -77,7 +77,7 @@ for _ in range(nlambdas):
     bias.append(bi)
     variance.append(var)
 
-
+"""
 plt.figure()
 plt.title("ridge regression")
 plt.semilogy(lambdas,error, "o", label="error", color = "r")
@@ -88,25 +88,26 @@ plt.semilogy(lambdas,variance, "o", label="variance", color = "b")
 plt.semilogy(lambdas,variance, color = "b")
 plt.legend()
 plt.show()
+"""
 
-
-n_bootstraps = 150
+n_bootstraps = 275
 
 nlambdas = 13
 lam_high = 0.5
 lam_low = -12
-order = 15
+order = 8
 
-p = [7, 8, 9, 14]
-"""
-for i in p:
-    err,bi,var, xaxis = bootstrapRidge(x,y,z, i, n_bootstraps, lam_low, lam_high, nlambdas)
+#p = [7, 8, 9, 14]
+
+err,bi,var, xaxis = bootstrapRidge(x,y,z, order, n_bootstraps, lam_low, lam_high, nlambdas)
     
-    plt.figure()
-    plt.title(i)
-    plt.semilogy(xaxis, err, label='Error')
-    plt.semilogy(xaxis, bi, label='bias')
-    plt.semilogy(xaxis, var, label='Variance')
-    plt.legend()
-    plt.show()
-"""
+plt.figure()
+plt.semilogy(xaxis, err, label='Error', color="r")
+plt.semilogy(xaxis, bi, label='bias', color="g")
+plt.semilogy(xaxis, var, label='Variance', color="b")
+plt.semilogy(xaxis, err, "o", color="r")
+plt.semilogy(xaxis, bi, "o", color="g")
+plt.semilogy(xaxis, var, "o", color="b")
+plt.legend()
+plt.show()
+

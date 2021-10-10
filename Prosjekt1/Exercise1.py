@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 
 x,y,z = datapoints()
 
-order = 15
+order = 7
 polynomials = np.linspace(1,order,order)
 
 def OLS(x,y,z,order):
@@ -58,10 +58,10 @@ r2_test = []
 for p in range(1,order+1):
     data = OLS(x,y,z,p)
     i,j,k,l = data[0], data[1], data[2], data[3]
-    mse_train.append(i)
-    mse_test.append(j)
-    r2_train.append(k)
-    r2_test.append(l)
+    mse_train.append(data[0])
+    mse_test.append(data[1])
+    r2_train.append(data[2])
+    r2_test.append(data[3])
     print("Polynom: %.f | MSE train: %.3f | MSE test: %.3f | R2 train: %.3f | R2 test: %.3f" %(p,i,j,k,l))
 
 """

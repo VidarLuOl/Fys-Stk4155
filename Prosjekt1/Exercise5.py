@@ -1,12 +1,10 @@
 import numpy as np
 from Functions import datapoints, create_X
-from Funksjoner import Variance
-
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
-from sklearn import linear_model
+from sklearn.linear_model import Lasso
 
 x,y,z = datapoints()
 
@@ -31,7 +29,7 @@ def lassoRegression(x,y,z, order, lamb, nlambdas):
     z_mean_test = np.mean(z_test)
     z_train = (z_train - z_mean_test)/np.std(z_test)
     
-    RegLasso = linear_model.Lasso(lamb,fit_intercept=False)
+    RegLasso = Lasso(lamb,fit_intercept=False)
     RegLasso.fit(X_train_scale,z_train)
     
     z_tilde = RegLasso.predict(X_train)
