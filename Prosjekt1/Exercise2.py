@@ -1,28 +1,19 @@
-import numpy as np
-from Functions import FrankeFunction, OLS, boot, bootstrap
+from Functions import datapoints, OLS, bootstrapOLS, boot
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.stats import norm
 
 
+x,y,z = datapoints()
 
-np.random.seed(20)
-
-N = 25
-dt = float(1/N)
-x = np.arange(0, 1, dt)
-y = np.arange(0, 1, dt)
-x, y = np.meshgrid(x,y)
-
-z = FrankeFunction(x,y)
-z_noise = FrankeFunction(x,y) + 0.2*np.random.randn(len(x),len(x))
 order = 20
 p = 15
         
-data = OLS(x,y,z_noise,p)
+data = OLS(x,y,z,p)
 X_train_scaled = data[-4]
 
-"""
-n_samples = 1000
+
+n_samples = 500
 t = boot(X_train_scaled, n_samples)
 n, binsboot, patches = plt.hist(t, 50, density=True, facecolor='red', alpha=0.75)
 
@@ -32,17 +23,23 @@ plt.xlabel('x')
 plt.ylabel('Probability')
 plt.grid(True)
 plt.show()
-"""
 
-n_bootstraps = 250
-maxdegree = 10
+
+n_bootstraps = 625
+maxdegree = 12
     
-err,bi,var,polydeg = bootstrap(x,y,z_noise, maxdegree, n_bootstraps)
+err,bi,var,polydeg = bootstrapOLS(x,y,z, maxdegree, n_bootstraps)
 
 plt.figure()
-plt.plot(polydeg, err, label='Error')
-plt.plot(polydeg, bi, label='bias')
-plt.plot(polydeg, var, label='Variance')
+plt.title("OLS bootstrap")
+plt.semilogy(polydeg, err, label='Error', color = "r")
+plt.semilogy(polydeg, bi, label='Bias', color = "g")
+plt.semilogy(polydeg, var, label='Variance', color = "b")
+plt.semilogy(polydeg, err, "o", color = "r")
+plt.semilogy(polydeg, bi, "o", color = "g")
+plt.semilogy(polydeg, var, "o", color = "b")
+plt.xlabel("order")
+plt.ylabel("score")
 plt.legend()
 plt.show()
 

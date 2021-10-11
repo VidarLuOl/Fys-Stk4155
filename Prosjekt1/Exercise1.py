@@ -1,29 +1,18 @@
 import numpy as np
-from Functions import FrankeFunction, create_X, beta#, OLS
+from Functions import datapoints, create_X, beta
 from Funksjoner import Variance
-import matplotlib.pyplot as plt
 
-import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
-from sklearn.utils import resample
 
 
 
-np.random.seed(20)
+x,y,z = datapoints()
 
-N = 25
-dt = float(1/N)
-x = np.arange(0, 1, dt)
-y = np.arange(0, 1, dt)
-x, y = np.meshgrid(x,y)
-
-z = FrankeFunction(x,y)
-z_noise = FrankeFunction(x,y) + 0.2*np.random.randn(len(x),len(x))
-order = 8
+order = 11
+polynomials = np.linspace(1,order,order)
 
 def OLS(x,y,z,order):
     X = create_X(x, y, order)
@@ -67,42 +56,47 @@ r2_test = []
 
 
 for p in range(1,order+1):
-    data = OLS(x,y,z_noise,p)
+    data = OLS(x,y,z,p)
     i,j,k,l = data[0], data[1], data[2], data[3]
-    mse_train.append(i)
-    mse_test.append(j)
-    r2_train.append(k)
-    r2_test.append(l)
+    mse_train.append(data[0])
+    mse_test.append(data[1])
+    r2_train.append(data[2])
+    r2_test.append(data[3])
     print("Polynom: %.f | MSE train: %.3f | MSE test: %.3f | R2 train: %.3f | R2 test: %.3f" %(p,i,j,k,l))
 
-
-
-polynomials = np.linspace(1,order,order)
-
-    
-    
+"""
 plt.figure()
+plt.title("mse")
 plt.semilogy(polynomials,mse_train)
 plt.semilogy(polynomials,mse_test)
-
+plt.show()
 
 plt.figure()
+plt.title("r2")
 plt.plot(polynomials,r2_train)
 plt.plot(polynomials,r2_test)        
-
-
-
+plt.show()
 """
-data5 = OLS(x,y,z_noise,5)
 
-beta5 = data5[-5]
-X = data5[-4]
-
-var = Variance(X,20)
-
-sigma = np.sqrt(var)*1.96
 
 plt.figure()
-x_axis = np.linspace(0,len(beta5),len(beta5))
-plt.errorbar(x_axis, beta5, sigma, fmt="o")
-"""
+plt.title("mse OLS")
+plt.semilogy(polynomials,mse_train, "o", label = "mse train", color = "r")
+plt.semilogy(polynomials,mse_train, color = "r")
+plt.semilogy(polynomials,mse_test, "o", label = "mse test", color = "b")
+plt.semilogy(polynomials,mse_test, color = "b")
+plt.xlabel("order")
+plt.ylabel("MSE")
+plt.legend()
+plt.show()
+
+plt.figure()
+plt.title("R2 OLS")
+plt.plot(polynomials,r2_train, "o", label = "R2 train", color = "r")
+plt.plot(polynomials,r2_train, color = "r")
+plt.plot(polynomials,r2_test, "o", label = "R2 test", color = "b")
+plt.plot(polynomials,r2_test, color = "b")
+plt.xlabel("order")
+plt.ylabel("R2")
+plt.legend()
+plt.show()

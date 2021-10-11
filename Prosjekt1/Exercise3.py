@@ -1,5 +1,5 @@
 import numpy as np
-from Functions import FrankeFunction, OLS, bootstrap, create_X, beta#, cross_validation
+from Functions import datapoints, OLS, bootstrapOLS, create_X, beta
 import matplotlib.pyplot as plt
 import random as random
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
@@ -8,24 +8,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 
 
-def datapoints():
-    np.random.seed(20)
-    N = 25
-    dt = float(1/N)
-    x = np.arange(0, 1, dt)
-    y = np.arange(0, 1, dt)
-    x, y = np.meshgrid(x,y)#
-    z_noise = FrankeFunction(x,y) + 0.2*np.random.randn(len(x),len(x))
-    return x,y,z_noise
+x,y,z = datapoints()
 
+def OLSkFold(x,y,z, maxdegree, kfold):
 
-def OLSkFold(maxdegree, kfold):
-    x,y,z = datapoints()
+    mse_train = np.empty((maxdegree, kfold))
+    mse_test = np.empty((maxdegree, kfold))
+    r2_train = np.empty((maxdegree, kfold))
+    r2_test = np.empty((maxdegree, kfold))      
     
-    mse_train = np.empty((kfold, maxdegree))
-    mse_test = np.empty((kfold, maxdegree))
-    r2_train = np.empty((kfold, maxdegree))
-    r2_test = np.empty((kfold, maxdegree))    
     
     for degree in range(1,maxdegree):
         X = create_X(x,y,degree)
@@ -33,8 +24,8 @@ def OLSkFold(maxdegree, kfold):
         X_train, z_train = shuffle(X, z_data)
         
         
-        x_data = np.array_split(X_train, kfolds)
-        z_data = np.array_split(z_train, kfolds)
+        x_data = np.array_split(X_train, kfold)
+        z_data = np.array_split(z_train, kfold)
         
     
         for i in range(0,len(x_data)):    
@@ -57,10 +48,16 @@ def OLSkFold(maxdegree, kfold):
             X_train_scale[:,0] = 1
             X_test_scale[:,0] = 1
             
-            coefs = beta(X_train, z_train)
+            z_mean_train = np.mean(z_train)
+            z_train = (z_train - z_mean_train)/np.std(z_train)
             
-            z_fit = X_train.dot(coefs)
-            z_pred = X_test.dot(coefs)
+            z_mean_test = np.mean(z_test)
+            z_train = (z_train - z_mean_test)/np.std(z_test)
+            
+            coefs = beta(X_train_scale, z_train)
+            
+            z_fit = X_train_scale.dot(coefs)
+            z_pred = X_test_scale.dot(coefs)
             
             
             MSE_train = mean_squared_error(z_fit, z_train)
@@ -68,92 +65,50 @@ def OLSkFold(maxdegree, kfold):
             
             R2_train = r2_score(z_fit, z_train)
             R2_test = r2_score(z_pred, z_test)
-            
-            mse_train[i][degree] = MSE_train
-            mse_test[i][degree] = MSE_test
-            r2_train[i][degree] = R2_train
-            r2_test[i][degree] = R2_test 
 
+            mse_train[degree][i] = MSE_train
+            mse_test[degree][i] = MSE_test
+            r2_train[degree][i] = R2_train
+            r2_test[degree][i] = R2_test    
             
     return mse_train, mse_test, r2_train, r2_test
 
-degree = 5
+maxdegree = 12
 kfolds = 4
 
 
-mse_train = []
-mse_test = []
-r2_train = []
-r2_test = []
+msetrain, msetest, r2train, r2test = OLSkFold(x,y,z,maxdegree, kfolds)
 
-data = OLSkFold(degree, kfolds)
 
-print(data[0][0])
 
-polynoms = np.linspace(1,degree, degree)
-       
-plt.figure()          
-plt.title("mse train")      
-for p in range(degree-1):
-    plt.plot(polynoms,data[0][p])
+msetrain = [np.mean(msetrain[_]) for _ in range(maxdegree)]
+msetest = [np.mean(msetest[_]) for _ in range(maxdegree)]
+r2train = [np.mean(r2train[_]) for _ in range(maxdegree)]
+r2test = [np.mean(r2test[_]) for _ in range(maxdegree)]
+
+polynoms = np.linspace(1,maxdegree, maxdegree)
+
+plt.figure()         
+plt.title("MSE kFold OLS") 
+plt.plot(polynoms,msetrain, label = "MSE train", color = "r")                
+plt.plot(polynoms,msetest, label = "MSE test", color = "b")
+plt.plot(polynoms,msetrain, "o", color = "r")                
+plt.plot(polynoms,msetest, "o", color = "b")  
+plt.xlabel("order")
+plt.ylabel("mse")
+plt.legend()
+plt.show()  
     
+plt.figure()         
+plt.title("R2 kFold OLS") 
+plt.plot(polynoms,r2train, label = "R2 train", color = "r")                
+plt.plot(polynoms,r2test, label = "R2 test", color = "b")
+plt.plot(polynoms,r2train, "o", color = "r")                
+plt.plot(polynoms,r2test, "o", color = "b")  
+plt.xlabel("order")
+plt.ylabel("R2")
+plt.legend()
+plt.show() 
 
-plt.figure()
-plt.title("mse test")                  
-for p in range(degree-1):
-    plt.plot(polynoms,data[1][p])
-    
-plt.figure()   
-plt.title("r2 train")                
-for p in range(degree-1):
-    plt.plot(polynoms,data[2][p])
-
-plt.figure() 
-plt.title("r2 test")                
-for p in range(degree-1):
-    plt.plot(polynoms,data[3][p])
 
     
-
-    
-
-"""
-def cross_validation(x,y,z, maxdegree, kfolds):
-    error = np.zeros(maxdegree)
-    bias = np.zeros(maxdegree)
-    variance = np.zeros(maxdegree)
-    polydegree = np.zeros(maxdegree)
-    
-    for degree in range(maxdegree):
-        clf = LinearRegression(fit_intercept=False)
-        data = OLS(x,y,z,degree)
-        
-        X_train, X_test, z_train, z_test = data[-4], data[-3], data[-2], data[-1]
-        
-        z_pred = np.empty((z_test.shape[0], n_bootstraps))
-        Z_test = z_pred.copy()
-        Z_train = z_train.copy()
-        
-        
-        
-        for i in range(n_bootstraps):
-            x_, z_ = resample(X_train, Z_train)   
-            z_pred[:, i] = clf.fit(x_, z_).predict(X_test)
-            Z_test[:, i] = z_test  
-            
-        
-        polydegree[degree] = degree
-    
-        error[degree] = np.mean( np.mean((Z_test - z_pred)**2, axis=1, keepdims=True) )
-        bias[degree] = np.mean( (Z_test - np.mean(z_pred, axis=1, keepdims=True))**2 )
-        variance[degree] = np.mean( np.var(z_pred, axis=1, keepdims=True) )
-        
-
-        print('Polynomial degree:', degree)
-        print('Error:', error[degree])
-        print('Bias^2:', bias[degree])
-        print('Var:', variance[degree])
-        print('{} >= {} + {} = {}'.format(error[degree], bias[degree], variance[degree], bias[degree]+variance[degree]))
-
-    return error, bias, variance, polydegree
-"""
