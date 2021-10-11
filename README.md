@@ -8,4 +8,4 @@
 
 # Kjøreinstrukser
 
-For å kjøre koden bruk Hovedfilen.py og Funksjoner.py.
+For å kjøre koden bruk Hovedfilen.py og Funksjoner.py eller hver av excersise filene
