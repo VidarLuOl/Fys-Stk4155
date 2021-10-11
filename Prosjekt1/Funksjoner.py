@@ -191,9 +191,9 @@ def CV(x, y, z, p, n, cvAntall, conf, lamda, prnt, plot, ridge, lasso):
     plotMSETrain = np.zeros(p)
     plotMSETest = np.zeros(p)
 
-    for i in range(1, p+1):
-        for k in [1e-1, 1e-3, 1e-5, 1e-7, 1e-9, 1e-11, 1e-13]:
-            lamda = k
+    for k in [1e-1, 1e-3, 1e-5, 1e-7, 1e-9, 1e-11, 1e-13]:
+        lamda = k
+        for i in range(1, p+1):
             XD = Design_X(x, y, i) #Designmatrisen blir laget her
             meanMSEVectorTrain = np.zeros(cvAntall)
             meanMSEVectorTest = np.zeros(cvAntall)
@@ -259,14 +259,14 @@ def CV(x, y, z, p, n, cvAntall, conf, lamda, prnt, plot, ridge, lasso):
                 plt.title("MSE of test set. Lamda = %i, folds = %i, polynom = %i" %(k, cvAntall, p))
                     # plt.errorbar(range(0,len(beta.coef_)), beta.coef_, 1, fmt="o")
             else:
-                plt.plot(range(1,p+1), plotMSETrain, label="Train")
+                # plt.plot(range(1,p+1), plotMSETrain, label="Train")
                 plt.plot(range(1,p+1), plotMSETest, label=("Test"))
                 plt.title("MSE of training and test set. Folds = %i, polynom = %i" %(cvAntall, p))
                 plt.legend()
                 plt.show()
                 # return 
-    # plt.legend()
-    # plt.show()
+    plt.legend()
+    plt.show()
     # plt.title("Confidence intervall for the different betas")
     # plt.errorbar(range(0,len(beta)), beta, beta_ConfInt, fmt="o")
     # plt.show()

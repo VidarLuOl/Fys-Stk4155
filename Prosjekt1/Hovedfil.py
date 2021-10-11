@@ -16,7 +16,7 @@ from imageio import imread
 """_________________________Variabler_______________________"""
 n = 20          #Antall punkter i x- og y-retning på modellen
 noise = 0.1     #Hvor mye støy påvirker modellen 
-p = 9          #Grad av polynom
+p = 10          #Grad av polynom
 s = 0.3         #Hvor stor del av dataen som skal være test
 conf = 1.96     #Confidence intervall, 95% her
 lamda = 1e-10   #Swag master 3000 verdier lizm
@@ -28,7 +28,7 @@ bootNumber = 100  #Antall bootstrap
 cvAntall = 10
 
 "Hvilken oppgave vil du kjøre"
-Opg = 6         #Hvilken Opg som skal kjøre, 1 = OLS, 2 = Bootstrap, 3 = CV
+Opg = 6        #Hvilken Opg som skal kjøre, 1 = OLS, 2 = Bootstrap, 3 = CV
 ridge = False   #Om du vil inkludere Ridge Regression på Frankefunksjonen
 lasso = False   #Om du vil inkludere Lasso Regression på Frankefunksjonen
 prnt = 1        #Om du vil printe ut resultater. 0=nei, 1=ja
@@ -60,14 +60,15 @@ noise_full = noise*np.random.randn(len(terrain[:,0]), len(terrain[0]))
 
 # len(terrain[0]) = 1801
 # len(terrain[:,0]) = 3601
-plt.figure()
-plt.title("Terrain over Norway 1")
-plt.imshow(terrain, cmap="gray")
-plt.xlabel("X")
-plt.ylabel("Y")
-plt.show()
+# plt.figure()
+# plt.title("Terrain over Norway 1")
+# # plt.imshow(terrain, cmap="gray")
+# plt.contour(x, y, terrain, 3)
+# plt.xlabel("X")
+# plt.ylabel("Y")
+# plt.show()
 
-print(terrain)
+# print(terrain)
 
 
 
