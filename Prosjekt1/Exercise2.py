@@ -1,6 +1,7 @@
-from Functions import datapoints, OLS, bootstrapOLS
+from Functions import datapoints, OLS, bootstrapOLS, boot
 import matplotlib.pyplot as plt
-
+import numpy as np
+from scipy.stats import norm
 
 
 x,y,z = datapoints()
@@ -11,8 +12,8 @@ p = 15
 data = OLS(x,y,z,p)
 X_train_scaled = data[-4]
 
-"""
-n_samples = 1000
+
+n_samples = 500
 t = boot(X_train_scaled, n_samples)
 n, binsboot, patches = plt.hist(t, 50, density=True, facecolor='red', alpha=0.75)
 
@@ -22,10 +23,10 @@ plt.xlabel('x')
 plt.ylabel('Probability')
 plt.grid(True)
 plt.show()
-"""
 
-n_bootstraps = 650
-maxdegree = 15
+
+n_bootstraps = 625
+maxdegree = 12
     
 err,bi,var,polydeg = bootstrapOLS(x,y,z, maxdegree, n_bootstraps)
 

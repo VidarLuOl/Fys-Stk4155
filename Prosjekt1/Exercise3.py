@@ -11,11 +11,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 x,y,z = datapoints()
 
 def OLSkFold(x,y,z, maxdegree, kfold):
-    #mse_train = np.empty((kfold, maxdegree))
-    #mse_test = np.empty((kfold, maxdegree))
-    #r2_train = np.empty((kfold, maxdegree))
-    #r2_test = np.empty((kfold, maxdegree)) 
-    
+
     mse_train = np.empty((maxdegree, kfold))
     mse_test = np.empty((maxdegree, kfold))
     r2_train = np.empty((maxdegree, kfold))
@@ -28,8 +24,8 @@ def OLSkFold(x,y,z, maxdegree, kfold):
         X_train, z_train = shuffle(X, z_data)
         
         
-        x_data = np.array_split(X_train, kfolds)
-        z_data = np.array_split(z_train, kfolds)
+        x_data = np.array_split(X_train, kfold)
+        z_data = np.array_split(z_train, kfold)
         
     
         for i in range(0,len(x_data)):    
@@ -78,7 +74,7 @@ def OLSkFold(x,y,z, maxdegree, kfold):
     return mse_train, mse_test, r2_train, r2_test
 
 maxdegree = 12
-kfolds = 5
+kfolds = 4
 
 
 msetrain, msetest, r2train, r2test = OLSkFold(x,y,z,maxdegree, kfolds)

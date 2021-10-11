@@ -17,4 +17,4 @@ def dataTerrain(img):
 
 x,y,z = dataTerrain(terrain1)
 
-plt.contour(x,y,z)
+plt.contour(y,x,z)

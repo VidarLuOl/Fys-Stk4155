@@ -26,7 +26,7 @@ def dataTerrain(img):
 
 
 def plotOLS(x,y,z):
-    order = 10
+    order = 13
     polynomials = np.linspace(1,order,order)
     
     mse_train = []
@@ -59,7 +59,7 @@ def plotOLS(x,y,z):
 
 def plotOLSBootrstrap(x,y,z):
     n_bootstraps = 250
-    maxdegree = 16
+    maxdegree = 10
         
     err,bi,var,polydeg = bootstrapOLS(x,y,z, maxdegree, n_bootstraps)
     
@@ -122,12 +122,12 @@ def plotRidge(x,y,z):
 
 
 def plotRidgeBootstrap(x,y,z):
-    n_bootstraps = 1000
+    n_bootstraps = 500
     
     nlambdas = 13
     lam_high = 0.5
     lam_low = -12
-    order = 8
+    order = 5
 
     err,bi,var, xaxis = bootstrapRidge(x,y,z, order, n_bootstraps, lam_low, lam_high, nlambdas)
     
@@ -221,12 +221,12 @@ def plotLassoBootstrap(x,y,z):
 x,y,z = dataTerrain(terrain1)  
 
 
-#plotOLS(x, y, z)
+plotOLS(x, y, z)
 #plotOLSBootrstrap(x, y, z)
 
-plotRidge(x, y, z)
-plotRidgeBootstrap(x, y, z)
-plotLasso(x, y, z)
+#plotRidge(x, y, z)
+#plotRidgeBootstrap(x, y, z)
+#plotLasso(x, y, z)
 #plotLassoBootstrap(x, y, z)
 
 """______________________________terrain2______________________________"""
