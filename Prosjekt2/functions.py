@@ -6,9 +6,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 
 
-def datapoints():
+def datapoints(N=25):
     np.random.seed(124)
-    N = 25
     dt = float(1/N)
     x = np.arange(0, 1, dt)
     y = np.arange(0, 1, dt)
@@ -85,9 +84,9 @@ def OLS(x,y,z,order):
     return data
 
 
-def SGD(X_data, z_data, n_epochs, batch_size, eta, n):
+def SGD(X_data, z_data, n_epochs, batch_size, eta):
     a,b = X_data.shape
-    m = int(n/batch_size)
+    m = len(z_data)
     
     theta = np.random.randn(b)
     
