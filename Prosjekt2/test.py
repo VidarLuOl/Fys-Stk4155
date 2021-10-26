@@ -1,44 +1,62 @@
 # Importing various packages
+from functions import datapoints, create_X, sigmoid
 from math import exp, sqrt
 from random import random, seed
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import SGDRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
-n = 1000
-x = 2*np.random.rand(n,1)
-y = 4+3*x+np.random.randn(n,1)
-
-X = np.c_[np.ones((n,1)), x]
-
-
+n = 7
+x,y,z = datapoints()
+X = create_X(x, y, n)
 
 
+z_ravel = np.ravel(z)
 
-theta_linreg = np.linalg.pinv(X.T @ X) @ (X.T @ y)
-print("Own inversion")
-print(theta_linreg)
+X_train, X_test, z_train, z_test = train_test_split(X, z_ravel, test_size=0.20)
+    
+scaler = StandardScaler()
+scaler.fit(X_train)
+    
+X_train_scale = scaler.transform(X_train)
+X_test_scale = scaler.transform(X_test)
+
+X_train_scale[:,0] = 1
+X_test_scale[:,0] = 1
+
+
+scaler = StandardScaler()
+X_scale = scaler.fit(X_train)
+X_train_scale = scaler.transform(X)
+    
+theta_linreg = np.linalg.pinv(X_train.T @ X_train) @ (X_train.T @ z_train)
+#print("Own inversion")
+#print(theta_linreg)
 sgdreg = SGDRegressor(max_iter = 50, penalty=None, eta0=0.1)
-sgdreg.fit(x,y.ravel())
-print("sgdreg from scikit")
-print(sgdreg.intercept_, sgdreg.coef_)
+sgdreg.fit(X_train,z_train)
+#print("sgdreg from scikit")
+#print(sgdreg.intercept_, sgdreg.coef_)
 
 
-theta = np.random.randn(2,1)
-eta = 0.1
-Niterations = 1000
+a,b = np.shape(X_train_scale)
 
+theta = np.random.randn(b,a)
+eta = 0.0001
+Niterations = 100
+ 
 
 for iter in range(Niterations):
-    gradients = 2.0/n*X.T @ ((X @ theta)-y)
+    gradients = 2.0/n*X_train_scale.T @ ((X_train_scale @ theta)-z_ravel)
     theta -= eta*gradients
-print("theta from own gd")
-print(theta)
+#print("theta from own gd")
+#print(theta)
 
-xnew = np.array([[0],[2]])
-Xnew = np.c_[np.ones((2,1)), xnew]
-ypredict = Xnew.dot(theta)
-ypredict2 = Xnew.dot(theta_linreg)
+
+xnew = X_test.copy()
+ypredict = xnew.dot(theta)
+ypredict2 = xnew.dot(theta_linreg)
 
 
 n_epochs = 50
@@ -48,24 +66,30 @@ t0, t1 = 5, 50
 def learning_schedule(t):
     return t0/(t+t1)
 
-theta = np.random.randn(2,1)
+theta = np.random.randn(b)
 
 for epoch in range(n_epochs):
     for i in range(m):
-        random_index = np.random.randint(m)
-        xi = X[random_index:random_index+1]
-        yi = y[random_index:random_index+1]
-        gradients = 2.0* xi.T @ ((xi @ theta)-yi)
-        eta = learning_schedule(epoch*m+i)
+        random_index = np.random.randint(a-5)
+        xi = X_train[random_index:random_index+5]
+        zi = z_train[random_index:random_index+5]
+        gradients = 2.0* xi.T @ ((xi @ theta)-zi)
         theta = theta - eta*gradients
-print("theta from own sdg")
-print(theta)
+#print("theta from own sdg")
+#print(theta)
 
-plt.plot(xnew, ypredict, "r-")
-plt.plot(xnew, ypredict2, "b-")
-plt.plot(x, y ,'ro')
+ypredict3 = xnew.dot(theta)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+surf = ax.scatter(xnew[:,1], xnew[:,2], ypredict3)
+
+"""
+plt.scatter(xnew, ypredict2, "b-")
+plt.scatter(x, y ,'ro')
 plt.axis([0,2.0,0, 15.0])
 plt.xlabel(r'$x$')
 plt.ylabel(r'$y$')
 plt.title(r'Random numbers ')
 plt.show()
+"""
