@@ -85,6 +85,22 @@ def OLS(x,y,z,order):
     return data
 
 
+def SGD(X_data, z_data, n_epochs, batch_size, eta, n):
+    a,b = X_data.shape
+    m = int(n/batch_size)
+    
+    theta = np.random.randn(b)
+    
+    for epoch in range(n_epochs):
+        for i in range(m):
+            random_index = np.random.randint(a-5)
+            xi = X_data[random_index:random_index+5]
+            zi = z_data[random_index:random_index+5]
+            gradients = 2.0* xi.T @ ((xi @ theta)-zi)
+            theta = theta - eta*gradients
+            
+    return theta
+
 
 def sigmoid(x):
     return 1/(1 + np.exp**(-x))

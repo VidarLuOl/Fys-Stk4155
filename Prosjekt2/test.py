@@ -1,5 +1,5 @@
 # Importing various packages
-from functions import datapoints, create_X, sigmoid
+from functions import datapoints, create_X, sigmoid, SGD
 from math import exp, sqrt
 from random import random, seed
 import numpy as np
@@ -62,9 +62,6 @@ ypredict2 = xnew.dot(theta_linreg)
 n_epochs = 50
 M = 5   #size of each minibatch
 m = int(n/M) #number of minibatches
-t0, t1 = 5, 50
-def learning_schedule(t):
-    return t0/(t+t1)
 
 theta = np.random.randn(b)
 
@@ -80,16 +77,16 @@ for epoch in range(n_epochs):
 
 ypredict3 = xnew.dot(theta)
 
-fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.scatter(xnew[:,1], xnew[:,2], ypredict3)
 
-"""
-plt.scatter(xnew, ypredict2, "b-")
-plt.scatter(x, y ,'ro')
-plt.axis([0,2.0,0, 15.0])
-plt.xlabel(r'$x$')
-plt.ylabel(r'$y$')
-plt.title(r'Random numbers ')
-plt.show()
-"""
+
+ypredict4 = SGD(X_train, z_train, n_epochs, 10, eta, n)
+
+
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+surf = ax.scatter(xnew[:,1], xnew[:,2], ypredict3)
+
