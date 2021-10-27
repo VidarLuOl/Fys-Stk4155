@@ -1,78 +1,69 @@
 # Importing various packages
-from functions import datapoints, create_X, sigmoid
 from math import exp, sqrt
 from random import random, seed
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import SGDRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-import random as random
 
-np.random.seed(2021)
+n = 1000
+x = 2*np.random.rand(n,1)
+y = 4+3*x+np.random.randn(n,1)
 
-n = 9
-x,y,z = datapoints(N=50)
-X = create_X(x, y, n)
+X = np.c_[np.ones((n,1)), x]
+theta_linreg = np.linalg.inv(X.T @ X) @ (X.T @ y)
+print("Own inversion")
+print(theta_linreg)
+sgdreg = SGDRegressor(max_iter = 50, penalty=None, eta0=0.1)
+sgdreg.fit(x,y.ravel())
+print("sgdreg from scikit")
+print(sgdreg.intercept_, sgdreg.coef_)
 
 
-z_ravel = np.ravel(z)
+theta = np.random.randn(2,1)
+eta = 0.1
+Niterations = 1000
 
-X_train, X_test, z_train, z_test = train_test_split(X, z_ravel, test_size = 0.20)
-    
 
-a, b = X_train.shape
+print(np.shape(theta), np.shape(X))
+for iter in range(Niterations):
+    gradients = 2.0/n*X.T @ ((X @ theta)-y)
+    theta -= eta*gradients
+print("theta from own gd")
+print(theta)
+
+xnew = np.array([[0],[2]])
+Xnew = np.c_[np.ones((2,1)), xnew]
+ypredict = Xnew.dot(theta)
+ypredict2 = Xnew.dot(theta_linreg)
+
 
 n_epochs = 50
 M = 5   #size of each minibatch
-m = len(z_train)
-eta = 0.0001
+m = int(n/M) #number of minibatches
+t0, t1 = 5, 50
+def learning_schedule(t):
+    return t0/(t+t1)
 
-theta = np.random.randn(b)
+theta = np.random.randn(2,1)
+
+print(np.shape(X))
 
 for epoch in range(n_epochs):
     for i in range(m):
-        random_index = np.random.randint(a-5)
-        xi = X_train[random_index:random_index+5]
-        zi = z_train[random_index:random_index+5]
-        gradients = 2.0* xi.T @ ((xi @ theta)-zi)
+        random_index = np.random.randint(m)
+        xi = X[random_index:random_index+1]
+        yi = y[random_index:random_index+1]
+        gradients = 2.0* xi.T @ ((xi @ theta)-yi)
+        eta = learning_schedule(epoch*m+i)
         theta = theta - eta*gradients
+print("theta from own sdg")
+print(theta)
 
-
-
-ypredict3 = X_test.dot(theta)
-
-
-
-fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-surf = ax.scatter(X_test[:,1], X_test[:,2], ypredict3)
-
-
-np.random.seed(2021)
-
-def SGD(X_data, z_data, n_epochs, M, eta):
-    a,b = X_train.shape
-    m = len(z_data)
-    index = np.arange(0,m)
-    theta = np.random.randn(b)
-    for epoch in range( n_epochs):
-        random.shuffle(index)
-        X_train_sh = X_data[index]
-        z_train_sh = z_data[index]
-        
-        for i in range(0,m,M):
-            xi = X_train_sh[i:i+M]
-            zi = z_train_sh[i:i+M]
-            gradients = 2.0*xi.T @ ((xi @ theta)-zi)
-            theta = theta - eta*gradients
-
-    
-    return theta
-
-theta = SGD(X_train, z_train, n_epochs, M, eta)
-
-ypred = X_test.dot(theta)
-
-fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-surf = ax.scatter(X_test[:,1], X_test[:,2], ypred)
-
+plt.plot(xnew, ypredict, "r-")
+plt.plot(xnew, ypredict2, "b-")
+plt.plot(x, y ,'ro')
+plt.axis([0,2.0,0, 15.0])
+plt.xlabel(r'$x$')
+plt.ylabel(r'$y$')
+plt.title(r'Random numbers ')
+plt.show()

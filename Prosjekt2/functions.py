@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
 
 
 def datapoints(N=25):
@@ -48,56 +49,34 @@ def beta_ridge(X,y,lamb):
     I = np.eye(len(X[0]),len(X[0]))
     return np.linalg.inv(X.T.dot(X)-lamb*I).dot(X.T).dot(y)
 
-def OLS(x,y,z,order):
-    X = create_X(x, y, order)
-    z_ravel = np.ravel(z)
-
-    X_train, X_test, z_train, z_test = train_test_split(X, z_ravel, test_size=0.20)
-    
-    scaler = StandardScaler()
-    scaler.fit(X_train)
-    
-    X_train_scale = scaler.transform(X_train)
-    X_test_scale = scaler.transform(X_test)
-
-    X_train_scale[:,0] = 1
-    X_test_scale[:,0] = 1
-    
-    
-    coefs = beta_ols(X_train_scale, z_train)
-    
-    z_fit = X_train_scale.dot(coefs)
-    z_pred = X_test_scale.dot(coefs)
-    
-    
-    MSE_train_scale = mean_squared_error(z_fit, z_train)
-    MSE_test_scale = mean_squared_error(z_pred, z_test)
-    
-    R2_train_scale = r2_score(z_fit, z_train)
-    R2_test_scale = r2_score(z_pred, z_test)
-    
-    
-    data =  MSE_train_scale, MSE_test_scale, \
-            R2_train_scale, R2_test_scale, \
-            coefs, z_fit, z_pred
+def OLS(X_data, z_data):  
+    clf = LinearRegression(fit_intercept=False)    
+    clf.fit(X_data, z_data)
+    coefs = clf.coef_
             
-    return data
+    return coefs
 
+def learning_schedule(t0, t1, t):
+    return t0/(t+t1)
 
-def SGD(X_data, z_data, n_epochs, batch_size, eta):
+def SGD(X_data, z_data, n_epochs, M, eta, t0, t1):
     a,b = X_data.shape
     m = len(z_data)
-    
+    index = np.arange(0,m)
     theta = np.random.randn(b)
-    
     for epoch in range(n_epochs):
-        for i in range(m):
-            random_index = np.random.randint(a-5)
-            xi = X_data[random_index:random_index+5]
-            zi = z_data[random_index:random_index+5]
-            gradients = 2.0* xi.T @ ((xi @ theta)-zi)
+        np.random.shuffle(index)
+        X_train_sh = X_data[index]
+        z_train_sh = z_data[index]
+        
+        for i in range(0,m,M):
+            xi = X_train_sh[i:i+M]
+            zi = z_train_sh[i:i+M]
+            gradients = 2.0*xi.T @ ((xi @ theta)-zi)
+            eta = learning_schedule(t0, t1, epoch*m+i)
             theta = theta - eta*gradients
-            
+
+    
     return theta
 
 
