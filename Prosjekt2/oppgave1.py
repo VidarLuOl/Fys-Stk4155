@@ -12,7 +12,7 @@ import random as random
 
 
 
-n_epochs = 50
+n_epochs = 25
 M = 5
 eta = 0.0001
 t0, t1 = 0, 1

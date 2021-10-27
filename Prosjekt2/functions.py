@@ -62,6 +62,7 @@ def learning_schedule(t0, t1, t):
 def SGD(X_data, z_data, n_epochs, M, eta, t0, t1):
     a,b = X_data.shape
     m = len(z_data)
+    print(m)
     index = np.arange(0,m)
     theta = np.random.randn(b)
     for epoch in range(n_epochs):
@@ -73,7 +74,9 @@ def SGD(X_data, z_data, n_epochs, M, eta, t0, t1):
             xi = X_train_sh[i:i+M]
             zi = z_train_sh[i:i+M]
             gradients = 2.0*xi.T @ ((xi @ theta)-zi)
-            eta = learning_schedule(t0, t1, epoch*m+i)
+            if t0 != 0:
+                eta = learning_schedule(t0, t1, epoch*m+i)
+            
             theta = theta - eta*gradients
 
     
